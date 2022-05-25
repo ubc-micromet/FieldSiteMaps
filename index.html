@@ -82,14 +82,43 @@ async function mapData(){
                     map.fitBounds(bbox, {padding: 80});
                     }
 
+
+    const mapStyle = {
+        version: 8,
+        sources: {
+        worldImagery: {
+            type: "raster",
+            tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            ],
+            tileSize: 256
+        }
+        },
+        layers: [
+        {
+            id: "worldImagery",
+            type: "raster",
+            source: "worldImagery",
+            minzoom: 0,
+            maxzoom: 22
+        }
+        ]
+    };
+
+
+
+
     //  Create the map - zoom and center are arbitrary
     const map = new mapboxgl.Map({
                 container: 'map',
                 zoom: 4,
                 center: [-125.193328, 50.506185],
-                style: 'mapbox://styles/mapbox/satellite-v9', // style URL
+                style: mapStyle,
+
+                // style: 'mapbox://styles/mapbox/satellite-v9', // style URL
                 // style: 'mapbox://styles/ect123/ck4ym048y4upi1cmzoq53immx'
                 });
+                
     //  Fit to bbox, overwrite the center/zoom
     fit();
     //  On load - add geojson
@@ -138,6 +167,8 @@ async function mapData(){
                 })
                 );
 
+    map.addControl(new mapboxgl.NavigationControl());
+    
     // Call fit when clicking the zoomto button
     document.getElementById('zoomto').addEventListener('click', () => {
         fit()
