@@ -13,14 +13,14 @@
 	body { margin: 0; padding: 0;}
 	#map { position: absolute; top: 0; bottom: 0; width: 100%;}
 	#map canvas {cursor: crosshair;}
-	#features {
+	/* #features {
 			position: absolute;
 			top: 0;
 			left: 0;
 			bottom: 0;
 			width: 25%;
 			overflow: auto;
-			background: rgba(255, 255, 255, 0.8);}
+			background: rgba(255, 255, 255, 0.8);} */
 
     /* Control the zoom to button */
     .btn-control {
@@ -47,7 +47,7 @@
 <body>
 <div id="map"></div>
 <!-- Added a zoom to button -->
-<button id="zoomto" class="btn-control">Zoom to bounds</button>
+<button id="zoomto" class="btn-control">Zoom to Trail</button>
 <pre id="features"></pre>
 <pre id="json"></pre>
 <script>
@@ -56,7 +56,7 @@
 // Location of the geojson
 // Specifying here allows for it to be more easily changed.
 // There is also an option where we could load .geojsons local storage if desired.
-const dPath = 'https://raw.githubusercontent.com/ubc-lib-geo/mapbox-for-openindexmaps/Fit_To_Bounds_Issue/data/columbiaRiverBasin_1958.geojson';
+const dPath = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Site_Map.json';
 
 // There isn't an explicit way to get the bounds of a geojson with GLJS
 //   - seems there should be?
@@ -100,17 +100,17 @@ async function mapData(){
         });
 
     //  Add the layer, reference the source to minimize redundancy
-    map.addLayer({
-                'id': 'Data Layer Values',
-                'type': 'fill',
-                'source': 'Data Layer',
-                'layout': {},
-                    'paint': {
-                        'fill-color': '#FF8484',
-                        'fill-opacity': 0,
-                        'fill-outline-color': 'black'
-                    },
-                });
+    // map.addLayer({
+    //             'id': 'Data Layer Values',
+    //             'type': 'fill',
+    //             'source': 'Data Layer',
+    //             'layout': {},
+    //                 'paint': {
+    //                     'fill-color': '#FF8484',
+    //                     'fill-opacity': 0,
+    //                     'fill-outline-color': 'black'
+    //                 },
+    //             });
         
     // skeleton outline of the grid
     map.addLayer({
@@ -119,8 +119,8 @@ async function mapData(){
                 'source': 'Data Layer',
                 'layout': {},
                     'paint': {
-                        'line-color': 'black',
-                        'line-width': .5
+                        'line-color': 'red',
+                        'line-width': 2
                     },
                 });
     
