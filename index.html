@@ -57,7 +57,7 @@
 // Location of the geojson
 // Specifying here allows for it to be more easily changed.
 // There is also an option where we could load .geojsons local storage if desired.
-const dPath = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Site_Map.json';
+const dPath = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/RBM.json';
 
 // There isn't an explicit way to get the bounds of a geojson with GLJS
 //   - seems there should be?
@@ -168,7 +168,7 @@ async function mapData(){
                 );
 
     map.addControl(new mapboxgl.NavigationControl());
-    
+
     // Call fit when clicking the zoomto button
     document.getElementById('zoomto').addEventListener('click', () => {
         fit()
