@@ -61,6 +61,7 @@
 const trails = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/BB_Trails.geojson';
 const parking = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Parking.geojson';
 const towers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/FluxTowers.json';
+const chambers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Chambers.geojson';
 
 // There isn't an explicit way to get the bounds of a geojson with GLJS
 //   - seems there should be?
@@ -80,6 +81,11 @@ async function mapData(){
                                 'Accept': 'application/json'
                                 }
                             });
+    const chambers_data = await fetch(chambers, {
+                                headers: {
+                                'Accept': 'application/json'
+                                }
+                            });
     const parking_data = await fetch(parking, {
                                 headers: {
                                 'Accept': 'application/json'
@@ -88,6 +94,7 @@ async function mapData(){
     //  Read geojson from the fetched value
     const trails_geoJson = await trails_data.json();
     const towers_geoJson = await towers_data.json();
+    const chambers_geoJson = await chambers_data.json();
     const parking_geoJson = await parking_data.json();
     //  Turf moddule allows us to get the bounding box of a geojson 
     let bbox = turf.extent(trails_geoJson);
@@ -135,17 +142,21 @@ async function mapData(){
     //  On load - add geojson
     map.on('load', function() {
 
-    //  Add the geojson as a map source
+    //  Add the geojsons as a map sources
         map.addSource('Trails Layer', {
         type: 'geojson',
         data: trails_geoJson
         });
         
-
-        //  Add the geojson as a map source
         map.addSource('Towers Layer', {
             type: 'geojson',
             data: towers_geoJson
+            });
+
+        //  Add the geojson as a map source
+        map.addSource('Chambers Layer', {
+            type: 'geojson',
+            data: chambers_geoJson
             });
 
         map.addSource('Parking Layer', {
@@ -186,6 +197,18 @@ async function mapData(){
                 'paint': {
                     'circle-radius': 6,
                     'circle-color': '#fc79fa',
+                    "circle-stroke-width": 1,
+                    "circle-stroke-color": 'black'
+                    },
+                });
+
+    map.addLayer({
+                'id': 'Chambers',
+                'type': 'circle',
+                'source': 'Chambers Layer',
+                'paint': {
+                    'circle-radius': 6,
+                    'circle-color': '#fcf879',
                     "circle-stroke-width": 1,
                     "circle-stroke-color": 'black'
                     },
