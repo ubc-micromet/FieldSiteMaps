@@ -60,7 +60,7 @@
 // There is also an option where we could load .geojsons local storage if desired.
 const trails = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/BB_Trails.geojson';
 const parking = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Parking.geojson';
-// const towers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/FluxTowers.geojson';
+const towers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/FluxTowers.json';
 
 // There isn't an explicit way to get the bounds of a geojson with GLJS
 //   - seems there should be?
@@ -75,11 +75,11 @@ async function mapData(){
                                 'Accept': 'application/json'
                                 }
                             });
-    // const towers_data = await fetch(towers, {
-    //                             headers: {
-    //                             'Accept': 'application/json'
-    //                             }
-    //                         });
+    const towers_data = await fetch(towers, {
+                                headers: {
+                                'Accept': 'application/json'
+                                }
+                            });
     const parking_data = await fetch(parking, {
                                 headers: {
                                 'Accept': 'application/json'
@@ -87,7 +87,7 @@ async function mapData(){
                             });
     //  Read geojson from the fetched value
     const trails_geoJson = await trails_data.json();
-    // const towers_geoJson = await towers_data.json();
+    const towers_geoJson = await towers_data.json();
     const parking_geoJson = await parking_data.json();
     //  Turf moddule allows us to get the bounding box of a geojson 
     let bbox = turf.extent(trails_geoJson);
