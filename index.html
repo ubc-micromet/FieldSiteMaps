@@ -58,7 +58,9 @@
 // Location of the geojson
 // Specifying here allows for it to be more easily changed.
 // There is also an option where we could load .geojsons local storage if desired.
-const dPath = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/BB_Trails.geojson';
+const trails = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/BB_Trails.geojson';
+const parking = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Parking.geojson';
+const towers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/FluxTowers.geojson';
 
 // There isn't an explicit way to get the bounds of a geojson with GLJS
 //   - seems there should be?
@@ -68,15 +70,21 @@ async function mapData(){
     //  fetch() retreives data from a URL
     //   - Its an asynchronous command, returns a promise to retreive a value
     //   - By keeping everything in the mapData() function, commands are applied the value not the promise
-    const data = await fetch(dPath, {
+    const trails_data = await fetch(trails, {
+                                headers: {
+                                'Accept': 'application/json'
+                                }
+                            });
+    const parking_data = await fetch(parking, {
                                 headers: {
                                 'Accept': 'application/json'
                                 }
                             });
     //  Read geojson from the fetched value
-    const geoJson = await data.json();
+    const trails_geoJson = await trails_data.json();
+    const parking_geoJson = await parking_data.json();
     //  Turf moddule allows us to get the bounding box of a geojson 
-    let bbox = turf.extent(geoJson);
+    let bbox = turf.extent(trails_geoJson);
     //  fit() will fit the map to the bounding box of our geojson
     //  Called later after map is initialized
     function fit() {
@@ -122,23 +130,59 @@ async function mapData(){
     map.on('load', function() {
 
     //  Add the geojson as a map source
-        map.addSource('Data Layer', {
+        map.addSource('Trails Layer', {
         type: 'geojson',
-        data: geoJson
+        data: trails_geoJson
+        });
+        
+        map.addSource('Parking Layer', {
+        type: 'geojson',
+        data: parking_geoJson
         });
 
     //  Add the layer, reference the source to minimize redundancy
 
+
+    map.addLayer({
+                'id': 'Trail2',
+                'type': 'line',
+                'source': 'Trails Layer',
+                'layout': {},
+                    'paint': {
+                        'line-color': 'black',
+                        'line-width': 3
+                    },
+                });
+
     // skeleton outline of the grid
     map.addLayer({
-                'id': 'Data Layer Frame',
+                'id': 'Trail',
                 'type': 'line',
-                'source': 'Data Layer',
+                'source': 'Trails Layer',
                 'layout': {},
                     'paint': {
                         'line-color': 'red',
                         'line-width': 2
                     },
+                });
+
+
+    map.addLayer({
+                'id': 'Parking',
+                'type': 'circle',
+                'source': 'Parking Layer',
+                'paint': {
+                    'circle-radius': 6,
+                    'circle-color': '#70eefa',
+                    "circle-stroke-width": 1,
+                    "circle-stroke-color": 'black'
+                    // 'face-color': 'red',
+                    },
+                // 'layout': {},
+                //     'paint': {
+                //         'line-color': 'red',
+                //         'line-width': 2
+                //     },
                 });
     
     var geolocate = new mapboxgl.GeolocateControl({
