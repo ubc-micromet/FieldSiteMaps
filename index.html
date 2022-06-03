@@ -18,10 +18,10 @@
 			/* top: 0; */
 			right: 0;
 			bottom: 0;
-			width: 50%;
-			height: 7%;
+			width: 60%;
+			height: 10%;
 			overflow: auto;
-			background: rgba(255, 255, 255, 0.8);}
+			background: rgba(255, 255, 255, 0.6);}
 
     /* Control the zoom to button */
     .btn-control {
@@ -244,7 +244,7 @@ async function mapData(){
         // `e.point` is the x, y coordinates of the `mousemove` event
         // relative to the top-left corner of the map.
         // JSON.stringify(e.point) +
-        'Current Location:' +
+        'Current Location:<br>' +
         // `e.lngLat` is the longitude, latitude geographical position of the event.
         JSON.stringify(position);
     });
@@ -293,7 +293,7 @@ async function mapData(){
             });
         
         document.getElementById('features').innerHTML =
-        'Marker Location: ' +        
+        'Marker Location:<br>' +        
         JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]);
 
     });
