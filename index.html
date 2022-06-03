@@ -141,6 +141,13 @@ async function mapData(){
         data: trails_geoJson
         });
         
+
+        //  Add the geojson as a map source
+        map.addSource('Towers Layer', {
+            type: 'geojson',
+            data: towers_geoJson
+            });
+
         map.addSource('Parking Layer', {
         type: 'geojson',
         data: parking_geoJson
@@ -160,7 +167,6 @@ async function mapData(){
                     },
                 });
 
-    // skeleton outline of the grid
     map.addLayer({
                 'id': 'Trail',
                 'type': 'line',
@@ -172,6 +178,18 @@ async function mapData(){
                     },
                 });
 
+                
+    map.addLayer({
+                'id': 'Towers',
+                'type': 'circle',
+                'source': 'Towers Layer',
+                'paint': {
+                    'circle-radius': 6,
+                    'circle-color': '#fc79fa',
+                    "circle-stroke-width": 1,
+                    "circle-stroke-color": 'black'
+                    },
+                });
 
     map.addLayer({
                 'id': 'Parking',
@@ -182,13 +200,7 @@ async function mapData(){
                     'circle-color': '#70eefa',
                     "circle-stroke-width": 1,
                     "circle-stroke-color": 'black'
-                    // 'face-color': 'red',
                     },
-                // 'layout': {},
-                //     'paint': {
-                //         'line-color': 'red',
-                //         'line-width': 2
-                //     },
                 });
     
     var geolocate = new mapboxgl.GeolocateControl({
