@@ -18,7 +18,7 @@
 			/* top: 0; */
 			left: 0;
 			bottom: 0;
-			width: 50%;
+			width: 30%;
 			height: 10%;
 			overflow: auto;
 			background: rgba(255, 255, 255, 0.8);}
@@ -48,7 +48,7 @@
 <body>
 <div id="map"></div>
 <!-- Added a zoom to button -->
-<button id="zoomto" class="btn-control">Zoom to Trail</button>
+<button id="zoomto" class="btn-control">Zoom to Bog</button>
 <pre id="features"></pre>
 <pre id="json"></pre>
 <script>
@@ -97,11 +97,11 @@ async function mapData(){
     const chambers_geoJson = await chambers_data.json();
     const parking_geoJson = await parking_data.json();
     //  Turf moddule allows us to get the bounding box of a geojson 
-    let bbox = turf.extent(trails_geoJson);
+    let bbox = turf.extent(parking_geoJson);
     //  fit() will fit the map to the bounding box of our geojson
     //  Called later after map is initialized
     function fit() {
-                    map.fitBounds(bbox, {padding: 80});
+                    map.fitBounds(bbox, {padding: 100});
                     }
 
 
@@ -236,8 +236,8 @@ async function mapData(){
     map.addControl(geolocate);
 
     geolocate.on('geolocate', function(e) {
-        var lon = e.coords.longitude;
-        var lat = e.coords.latitude
+        var lon = e.coords.longitude.toPrecision(8);
+        var lat = e.coords.latitude.toPrecision(7);
         var position = [lon, lat];
         // console.log(position);
         document.getElementById('features').innerHTML =
@@ -271,6 +271,10 @@ async function mapData(){
     map.on('click', (e) => {
         // Add the marker (show where the click is)
         add_marker(e);
+        
+        // var lon2 = e.lngLat.longitude.toPrecision(8);
+        // var lat2 = e.lngLat.latitude.toPrecision(7);
+        // var position = lon2;
 
         // Get features at point click
         const features = map.queryRenderedFeatures(e.point, {layers: ['Data Layer Values']});
@@ -288,19 +292,9 @@ async function mapData(){
                 return displayFeat;
             });
         
-        // Write object as string with an indent of two spaces.
-        // document.getElementById('features').innerHTML = JSON.stringify(
-        // displayFeatures,
-        // null,
-        // 2
-        // );
         document.getElementById('features').innerHTML =
-        // `e.point` is the x, y coordinates of the `mousemove` event
-        // relative to the top-left corner of the map.
-        // JSON.stringify(e.point) +
-        'Marker Coordinates: <br />' +
-        // `e.lngLat` is the longitude, latitude geographical position of the event.
-        JSON.stringify(e.lngLat.wrap());
+        'Marker Coordinates: <br />' +        
+        JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]);
 
     });
 
