@@ -1,6 +1,6 @@
 # FieldSiteNavigation
 
-A Web Map to navigate the Micromet Field Sites can be found [here](https://june-skeeter.github.io/FieldSiteNavigation/).
+A Web Map to navigate the Micromet Field Sites can be found [here](https://ubc-micromet.github.io/FieldSiteMaps/).
 
 This application will load, zoomed in on Micromet Field Site access trails in data/
 

@@ -58,7 +58,7 @@
 // Location of the geojson
 // Specifying here allows for it to be more easily changed.
 // There is also an option where we could load .geojsons local storage if desired.
-const trails = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/BB_Trails2.geojson';
+const trails = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/BB_SiteAccessTrails.geojson';
 const parking = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Parking.geojson';
 const towers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/FluxTowers.json';
 const chambers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Chambers.geojson';
@@ -184,7 +184,7 @@ async function mapData(){
                 'source': 'Trails Layer',
                 'layout': {},
                     'paint': {
-                        'line-color': 'green',
+                        'line-color': 'red',
                         'line-width': 2
                     },
                 });
