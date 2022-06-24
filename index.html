@@ -53,12 +53,12 @@
 <pre id="json"></pre>
 <script>
 	mapboxgl.accessToken = 'pk.eyJ1IjoianVuZXNwYWNlYm9vdHMiLCJhIjoiY2twY3g4aXloMWFlcDJzbXN3aG95aG5uZiJ9.mFiJt0MIfL1MiJ2rB2xhKQ';
-    // pk.eyJ1IjoiZWN0MTIzIiwiYSI6ImNranAwN2V5cjA0OGwyc3RjMG81YmY5dzAifQ.E1gXN2BWib0Z0pnS95iOtg';
+    // Replace access token!
 
 // Location of the geojson
 // Specifying here allows for it to be more easily changed.
 // There is also an option where we could load .geojsons local storage if desired.
-const trails = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/BB_Trails.geojson';
+const trails = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/BB_Trails2.geojson';
 const parking = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Parking.geojson';
 const towers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/FluxTowers.json';
 const chambers = 'https://raw.githubusercontent.com/June-Skeeter/FieldSiteNavigation/main/data/Chambers.geojson';
@@ -184,7 +184,7 @@ async function mapData(){
                 'source': 'Trails Layer',
                 'layout': {},
                     'paint': {
-                        'line-color': 'red',
+                        'line-color': 'green',
                         'line-width': 2
                     },
                 });
