@@ -19,8 +19,10 @@
 			right: 0;
 			bottom: 0;
 			width: 100%;
+            /* margin: 10px; */
+            text-align: center;
 			height: 13%;
-			overflow: scroll;
+			overflow: clip;
 			background: rgba(255, 255, 255, 0.6);}
 
     /* Control the zoom to button */
@@ -37,7 +39,7 @@
         margin-left: -100px;
         display: block;
         cursor: pointer;
-        padding: 10px 20px;
+        padding: 10px;
         border-radius: 3px;
     }
     .btn-control:hover {
@@ -65,7 +67,17 @@
     .btn-home:hover {
         background-color: #4ea0da;
     }
-
+    table {
+        border-collapse: collapse;
+        /* table-layout: fixed; */
+        width: 100%;
+      }
+      td {
+        border: solid 1px #666;
+        /* width: 20%; */
+        max-width:10%;
+        word-break: break-all
+      }
 
 </style>
 </head>
@@ -155,8 +167,8 @@ async function mapData(){
     //  Create the map - zoom and center are arbitrary
     const map = new mapboxgl.Map({
                 container: 'map',
-                zoom: 4,
-                center: [-125.193328, 50.506185],
+                zoom: 8,
+                center: [-122.998, 49.135],
                 style: mapStyle,
                 // style: 'mapbox://styles/mapbox/satellite-v9', // style URL
                 // style: 'mapbox://styles/ect123/ck4ym048y4upi1cmzoq53immx'
@@ -310,7 +322,7 @@ async function mapData(){
 
         function makeTable () {
             try {
-            var tbl = ('<table width = 100%><tr>');
+            var tbl = ('<table><tr>');
             for (var key in features[0].properties){
                 tbl = tbl+'<th>'+key+'</th>';
             };
@@ -320,8 +332,6 @@ async function mapData(){
                 // var keys = Object.keys(obj);
                 for (var key in features[i].properties)
                     tbl = tbl+("<td>" + features[i].properties[key] + "</td>");
-                    // tr = tr+("<td>" + json[i].properties.label + "</td>");
-                    // tr = tr+("<td>" + json[i].properties.label + "</td>");
                 tbl = tbl+"</tr>"
             };
             tbl = tbl +'</table>';
