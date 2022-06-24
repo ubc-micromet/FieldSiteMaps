@@ -33,7 +33,7 @@
         left: 50%;
         z-index: 1;
         border: none;
-        width: 200px;
+        /* width: 200px; */
         margin-left: -100px;
         display: block;
         cursor: pointer;
@@ -43,12 +43,37 @@
     .btn-control:hover {
         background-color: #4ea0da;
     }
+
+
+    /* Control the zoom to button */
+    .btn-home {
+        font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        background-color: #3386c0;
+        color: #fff;
+        position: absolute;
+        top: 20px;
+        left: 0%;
+        z-index: 1;
+        border: none;
+        /* width: 200px; */
+        /* margin-left: -100px; */
+        display: block;
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 3px;
+    }
+    .btn-home:hover {
+        background-color: #4ea0da;
+    }
+
+
 </style>
 </head>
 <body>
 <div id="map"></div>
 <!-- Added a zoom to button -->
 <button id="zoomto" class="btn-control">Zoom to Bog</button>
+<button id="homepage" class="btn-home">View on <br>Github</button>
 <pre id="features"></pre>
 <pre id="json"></pre>
 <script>
@@ -256,6 +281,12 @@ async function mapData(){
     document.getElementById('zoomto').addEventListener('click', () => {
         fit()
     });
+
+    // Call fit when clicking the zoomto button
+    document.getElementById('homepage').addEventListener('click', () => {
+        window.open('https://github.com/ubc-micromet/FieldSiteMaps');
+    });
+
     });
 
     // Create an empty marker
