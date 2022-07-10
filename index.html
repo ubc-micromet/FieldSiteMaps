@@ -262,18 +262,18 @@ async function mapData(){
 
     map.addLayer({
                 'id': 'Flux Chamber Sites',
-                'type': 'circle',
+                'type': 'symbol',
                 'source': 'Chambers Layer',
                 'layout': {
                     // hide layer by default.
                     'visibility': 'none'
                 },
-                'paint': {
-                    'circle-radius': 6,
-                    'circle-color': '#fcf879',
-                    "circle-stroke-width": 1,
-                    "circle-stroke-color": 'black'
-                    },
+                // 'paint': {
+                //     'circle-radius': 6,
+                //     // 'circle-color': '#fcf879',
+                //     "circle-stroke-width": 1,
+                //     "circle-stroke-color": 'black'
+                //     },
                 });
 
     map.addLayer({
