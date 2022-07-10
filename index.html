@@ -47,7 +47,7 @@
     }
 
 
-    /* Control the zoom to button */
+    /* Control the Github Link button */
     .btn-home {
         font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         background-color: #3386c0;
@@ -67,6 +67,12 @@
     .btn-home:hover {
         background-color: #4ea0da;
     }
+
+    .mapboxgl-popup {
+        max-width: 400px;
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        }
+
     table {
         border-collapse: collapse;
         /* table-layout: fixed; */
@@ -255,7 +261,7 @@ async function mapData(){
                 });
 
     map.addLayer({
-                'id': 'Chambers',
+                'id': 'Flux Chamber Sites',
                 'type': 'circle',
                 'source': 'Chambers Layer',
                 'layout': {
@@ -330,55 +336,69 @@ async function mapData(){
         console.log('Lng:', coordinates.lng, 'Lat:', coordinates.lat);
         marker.setLngLat(coordinates).addTo(map);
         }
-    // Display desired attributes on click
-    map.on('click', (e) => {
-        // Add the marker (show where the click is)
-        add_marker(e);
+        map.on('click', 'places', (e) => {
+            // Copy coordinates array.
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const description = e.features[0].properties.description;
+            
+            // Ensure that if the map is zoomed out such that multiple
+            // copies of the feature are visible, the popup appears
+            // over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+            
+            new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map);
+            });
+    // // Display desired attributes on click
+    // map.on('click', (e) => {
+    //     // Add the marker (show where the click is)
+    //     add_marker(e);
 
-        // Get features at point click
-        var features = '' ;
-        features = map.queryRenderedFeatures(e.point, );
+    //     // Get features at point click
+    //     var features = '' ;
+    //     features = map.queryRenderedFeatures(e.point, );
        
-        // Create the table
+    //     // Create the table
 
-        function makeTable () {
-            try {
-            var tbl = ('<table><tr>');
-            for (var key in features[0].properties){
-                tbl = tbl+'<th>'+key+'</th>';
-            };
-            tbl = tbl + '</tr>'
-            for (var i = 0; i < features.length; i++) {
-                tbl = tbl+"<tr>"
-                // var keys = Object.keys(obj);
-                for (var key in features[i].properties)
-                    tbl = tbl+("<td>" + features[i].properties[key] + "</td>");
-                tbl = tbl+"</tr>"
-            };
-            tbl = tbl +'</table>';
-            } catch {
-                var tbl = '';
-            }
-            return tbl;
-            }
-        var Header = '<b>Marker Location</b>:<br>' +        
-        // JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]); +
-        e.lngLat['lat'].toPrecision(7) + e.lngLat['lng'].toPrecision(8)+
-        '<br><b>Selected Elements</b>:<br>' + makeTable()
-        // document.getElementById('features').innerHTML = displayFeatures[0].properties //makeTable(displayFeatures)
-        // document.getElementById('features').innerHTML = (makeTable(Header))
-        document.getElementById('features').innerHTML = (Header)//+makeTable())
+    //     function makeTable () {
+    //         try {
+    //         var tbl = ('<table><tr>');
+    //         for (var key in features[0].properties){
+    //             tbl = tbl+'<th>'+key+'</th>';
+    //         };
+    //         tbl = tbl + '</tr>'
+    //         for (var i = 0; i < features.length; i++) {
+    //             tbl = tbl+"<tr>"
+    //             // var keys = Object.keys(obj);
+    //             for (var key in features[i].properties)
+    //                 tbl = tbl+("<td>" + features[i].properties[key] + "</td>");
+    //             tbl = tbl+"</tr>"
+    //         };
+    //         tbl = tbl +'</table>';
+    //         } catch {
+    //             var tbl = '';
+    //         }
+    //         return tbl;
+    //         }
+    //     var Header = '<b>Marker Location</b>:<br>' +        
+    //     // JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]); +
+    //     e.lngLat['lat'].toPrecision(7) + e.lngLat['lng'].toPrecision(8)+
+    //     '<br><b>Selected Elements</b>:<br>' + makeTable()
+    //     // document.getElementById('features').innerHTML = displayFeatures[0].properties //makeTable(displayFeatures)
+    //     // document.getElementById('features').innerHTML = (makeTable(Header))
+    //     document.getElementById('features').innerHTML = (Header)//+makeTable())
 
+    // // });
     // });
-
-
-
-    });
 
     
     map.on('idle', () => {
         // Enumerate ids of the layers.
-        const toggleableLayerIds = ['Flux Towers', 'Chambers','Access Trails','Parking'];
+        const toggleableLayerIds = ['Flux Towers', 'Flux Chamber Sites','Access Trails','Parking'];
         
         // Set up the corresponding toggle button for each layer.
         for (const id of toggleableLayerIds) {
