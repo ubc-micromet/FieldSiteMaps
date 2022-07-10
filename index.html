@@ -11,7 +11,7 @@
 
 <style>
 	body { margin: 0; padding: 0;}
-	#map { position: absolute; top: 0; bottom: 15%; width: 100%;}
+	#map { position: absolute; top: 0; bottom: 0; width: 100%;}
 	#map canvas {cursor: crosshair;}
 	#features {
 			position: absolute;
@@ -136,7 +136,7 @@
 <!-- Added a zoom to button -->
 <button id="zoomto" class="btn-control">Zoom to All Sites</button>
 <button id="homepage" class="btn-home">View on <br>Github</button>
-<pre id="features"></pre>
+<!-- <pre id="features"></pre> -->
 <pre id="json"></pre>
 <script>
 	mapboxgl.accessToken = 'pk.eyJ1IjoianVuZXNwYWNlYm9vdHMiLCJhIjoiY2twY3g4aXloMWFlcDJzbXN3aG95aG5uZiJ9.mFiJt0MIfL1MiJ2rB2xhKQ';
@@ -197,7 +197,7 @@ async function mapData(){
     //  Create the map - zoom and center are "arbitrary"
     const map = new mapboxgl.Map({
                 container: 'map',
-                zoom: 9,
+                zoom: 11,
                 center: [-122.998, 49.135],
                 style: mapStyle,
                 });
@@ -262,7 +262,7 @@ async function mapData(){
 
     map.addLayer({
                 'id': 'Flux Chamber Sites',
-                'type': 'symbol',
+                'type': 'circle',
                 'source': 'Chambers Layer',
                 'layout': {
                     // hide layer by default.
@@ -336,23 +336,23 @@ async function mapData(){
         console.log('Lng:', coordinates.lng, 'Lat:', coordinates.lat);
         marker.setLngLat(coordinates).addTo(map);
         }
-        map.on('click', 'places', (e) => {
-            // Copy coordinates array.
-            const coordinates = e.features[0].geometry.coordinates.slice();
-            const description = e.features[0].properties.description;
-            
-            // Ensure that if the map is zoomed out such that multiple
-            // copies of the feature are visible, the popup appears
-            // over the copy being pointed to.
-            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-            }
-            
-            new mapboxgl.Popup()
-            .setLngLat(coordinates)
-            .setHTML(description)
-            .addTo(map);
-            });
+    map.on('click', 'Flux Towers', (e) => {
+        // Copy coordinates array.
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const description = e.features[0].properties.description;
+        
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+        
+        new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(description)
+        .addTo(map);
+        });
     // // Display desired attributes on click
     // map.on('click', (e) => {
     //     // Add the marker (show where the click is)
