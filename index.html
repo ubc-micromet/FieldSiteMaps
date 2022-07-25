@@ -341,7 +341,9 @@ async function mapData(){
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
         const description = '<b>Site Name</b>: '+e.features[0].properties.Name+'<br>'+
-        '<b>Coordinates</b>: '+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'<br>'+
+        // '<b>Coordinates</b>: '+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'<br>'+
+        // '<b>Operational Since</b>: '+e.features[0].properties.Start+'<br>'+
+        // '<b>Site Description</b>: '+e.features[0].properties.Description+'<br>'+
         '<a href='+e.features[0].properties.WebPlot+' target="_blank">View Web Plot</a>';
         
         // Ensure that if the map is zoomed out such that multiple
