@@ -69,7 +69,8 @@
     }
 
     .mapboxgl-popup {
-        max-width: 400px;
+        max-width: 1200px;
+        min-width: 400px;
         font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         }
 
@@ -339,7 +340,9 @@ async function mapData(){
     map.on('click', 'Flux Towers', (e) => {
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = '<b>Site Name: '+e.features[0].properties.Name+'</b><br><a href='+e.features[0].properties.WebPlot+'>View Web Plot</a>';
+        const description = '<b>Site Name</b>: '+e.features[0].properties.Name+'<br>'+
+        '<b>Coordinates</b>: '+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'<br>'+
+        '<a href='+e.features[0].properties.WebPlot+' target="_blank">View Web Plot</a>';
         
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
