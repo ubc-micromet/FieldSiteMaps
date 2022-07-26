@@ -146,7 +146,7 @@
 // Location of the geojsons
 const trails = 'BB_SiteAccessTrails.geojson';
 const parking = 'Parking.geojson';
-const towers = 'FluxTowers2.json';
+const towers = 'FluxTowers.json';
 const chambers = 'Chambers.geojson';
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/'
@@ -340,7 +340,7 @@ async function mapData(){
     map.on('click', 'Flux Towers', (e) => {
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = '<table style="width:100%; font-size:1.25em";><tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
+        const description = '<table style="width:100%; font-size:1.25em"><tr><td style="width:25%"><b>Site Name</b></td><td style="width:75%">'+e.features[0].properties.Name+'</td></tr>'+
         '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'</td></tr>'+
         '<tr><td><b>Operational Since</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
         '<tr><td><b>Site Description</b></td><td>'+e.features[0].properties.Description+'</td></tr>'+
