@@ -70,7 +70,7 @@
 
     .mapboxgl-popup {
         max-width: 1200px;
-        min-width: 400px;
+        min-width: 600px;
         font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         }
 
@@ -146,7 +146,7 @@
 // Location of the geojsons
 const trails = 'BB_SiteAccessTrails.geojson';
 const parking = 'Parking.geojson';
-const towers = 'FluxTowers.json';
+const towers = 'FluxTowers2.json';
 const chambers = 'Chambers.geojson';
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/'
@@ -340,11 +340,11 @@ async function mapData(){
     map.on('click', 'Flux Towers', (e) => {
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = '<b>Site Name</b>: '+e.features[0].properties.Name+'<br>'+
-        '<b>Coordinates</b>: '+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'<br>'+
-        // '<b>Operational Since</b>: '+e.features[0].properties.Start+'<br>'+
-        // '<b>Site Description</b>: '+e.features[0].properties.Description+'<br>'+
-        '<a href='+e.features[0].properties.WebPlot+' target="_blank">View Web Plot</a>';
+        const description = '<table style="width:100%; font-size:1.25em";><tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
+        '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'</td></tr>'+
+        '<tr><td><b>Operational Since</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
+        '<tr><td><b>Site Description</b></td><td>'+e.features[0].properties.Description+'</td></tr>'+
+        '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr></table>';
         
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
