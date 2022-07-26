@@ -70,7 +70,7 @@
 
     .mapboxgl-popup {
         max-width: 1200px;
-        min-width: 600px;
+        min-width: 500px;
         font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         }
 
@@ -340,7 +340,7 @@ async function mapData(){
     map.on('click', 'Flux Towers', (e) => {
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = '<table style="width:100%; font-size:1.25em"><tr><th style="width:25%"></th><th></th></tr>'+
+        const description = '<table style="width:100%; font-size:1.25em"><tr><th style="width:45%"></th><th></th></tr>'+
         '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
         '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'</td></tr>'+
         '<tr><td><b>Operational Since</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
