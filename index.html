@@ -340,11 +340,11 @@ async function mapData(){
     map.on('click', 'Flux Towers', (e) => {
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = '<table style="width:100%; font-size:1.25em"><tr><th style="width:45%"></th><th></th></tr>'+
+        const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
         '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
-        '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'</td></tr>'+
-        '<tr><td><b>Operational Since</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
-        '<tr><td><b>Site Description</b></td><td>'+e.features[0].properties.Description+'</td></tr>'+
+        '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision(7)+'</td></tr>'+
+        '<tr><td><b>First Year</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
+        '<tr><td><b>Site Description</b></td><td style="word-wrap: break-word">'+e.features[0].properties.Description+'</td></tr>'+
         '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
         '</table>';
         
