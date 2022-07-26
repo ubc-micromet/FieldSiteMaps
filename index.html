@@ -340,11 +340,13 @@ async function mapData(){
     map.on('click', 'Flux Towers', (e) => {
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = '<table style="width:100%; font-size:1.25em"><tr><td style="width:25%"><b>Site Name</b></td><td style="width:75%">'+e.features[0].properties.Name+'</td></tr>'+
+        const description = '<table style="width:100%; font-size:1.25em"><tr><th style="width:25%"></th><th></th></tr>'+
+        '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
         '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision()+'</td></tr>'+
         '<tr><td><b>Operational Since</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
         '<tr><td><b>Site Description</b></td><td>'+e.features[0].properties.Description+'</td></tr>'+
-        '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr></table>';
+        '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
+        '</table>';
         
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
