@@ -149,7 +149,7 @@ const parking = 'Parking.geojson';
 const towers = 'FluxTowers.json';
 const chambers = 'Chambers.geojson';
 
-const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/'
+const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/';
 
 
 // This function allows us to read any geojson from a URL
@@ -344,7 +344,7 @@ async function mapData(){
         '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
         '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision(7)+'</td></tr>'+
         '<tr><td><b>First Year</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
-        '<tr><td><b>Site Description</b></td><td style="word-wrap: break-word">'+e.features[0].properties.Description+'</td></tr>'+
+        '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
         '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
         '</table>';
         
