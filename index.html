@@ -148,6 +148,7 @@ const trails = 'BB_SiteAccessTrails.geojson';
 const parking = 'Parking.geojson';
 const towers = 'FluxTowers.json';
 const chambers = 'Chambers.geojson';
+const grid = 'Seedling_Grid.geojson';
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/';
 
@@ -167,6 +168,7 @@ async function mapData(){
     const towers_geoJson = await getGeoJson(URL+towers)
     const chambers_geoJson = await getGeoJson(URL+chambers)
     const parking_geoJson = await getGeoJson(URL+parking)
+    const grid_geoJson = await getGeoJson(URL+grid)
 
     //  Turf moddule allows us to get the bounding box of a geojson 
     let bbox = turf.extent(towers_geoJson);
@@ -210,10 +212,15 @@ async function mapData(){
     map.on('load', function() {
 
     //  Add the geojsons as a map sources
+        map.addSource('Grid Layer', {
+            type: 'geojson',
+            data: grid_geoJson
+            });
+            
         map.addSource('Trails Layer', {
-        type: 'geojson',
-        data: trails_geoJson
-        });
+            type: 'geojson',
+            data: trails_geoJson
+            });
         
         map.addSource('Towers Layer', {
             type: 'geojson',
@@ -231,6 +238,20 @@ async function mapData(){
         data: parking_geoJson
         });
 
+    map.addLayer({
+                'id': 'Seedling Grid',
+                'type': 'line',
+                'source': 'Grid Layer',
+                'layout': {
+                    // hide layer by default.
+                    'visibility': 'none'
+                },
+                    'paint': {
+                        'line-color': ['get', 'color'],
+                        'line-width': 2
+                    },
+                });
+                
     map.addLayer({
                 'id': 'Access Trails',
                 'type': 'line',
@@ -405,7 +426,7 @@ async function mapData(){
     
     map.on('idle', () => {
         // Enumerate ids of the layers.
-        const toggleableLayerIds = ['Flux Towers', 'Flux Chamber Sites','Access Trails','Parking'];
+        const toggleableLayerIds = ['Flux Towers', 'Flux Chamber Sites','Access Trails','Parking','Seedling Grid'];
         
         // Set up the corresponding toggle button for each layer.
         for (const id of toggleableLayerIds) {
