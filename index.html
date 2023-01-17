@@ -21,9 +21,9 @@
 			width: 100%;
             /* margin: 10px; */
             text-align: center;
-			height: 13%;
+			height: 10%;
 			overflow: scroll;
-			background: rgba(255, 255, 255, 0.6);}
+			background: rgba(255, 255, 255, 0.7);}
 
     /* Control the zoom to button */
     .btn-control {
@@ -137,7 +137,7 @@
 <!-- Added a zoom to button -->
 <button id="zoomto" class="btn-control">Zoom to Sites</button>
 <button id="homepage" class="btn-home">View on <br>Github</button>
-<!-- <pre id="features"></pre> -->
+<pre id="features"></pre>
 <pre id="json"></pre>
 <script>
 	mapboxgl.accessToken = 'pk.eyJ1IjoianVuZXNwYWNlYm9vdHMiLCJhIjoiY2twY3g4aXloMWFlcDJzbXN3aG95aG5uZiJ9.mFiJt0MIfL1MiJ2rB2xhKQ';
@@ -329,7 +329,7 @@ async function mapData(){
         document.getElementById('features').innerHTML =
         // `e.point` is the x, y coordinates of the `mousemove` event
         // relative to the top-left corner of the map.
-        // JSON.stringify(e.point) +
+        JSON.stringify(e.point) +
         'Current Location:<br>' +
         // `e.lngLat` is the longitude, latitude geographical position of the event.
         JSON.stringify(position);
@@ -382,46 +382,47 @@ async function mapData(){
         .addTo(map);
         });
     // // Display desired attributes on click
-    // map.on('click', (e) => {
-    //     // Add the marker (show where the click is)
-    //     add_marker(e);
+    map.on('click', (e) => {
+        // Add the marker (show where the click is)
+        add_marker(e);
 
-    //     // Get features at point click
-    //     var features = '' ;
-    //     features = map.queryRenderedFeatures(e.point, );
+        // Get features at point click
+        var features = '' ;
+        features = map.queryRenderedFeatures(e.point, );
        
-    //     // Create the table
+        // Create the table
 
-    //     function makeTable () {
-    //         try {
-    //         var tbl = ('<table><tr>');
-    //         for (var key in features[0].properties){
-    //             tbl = tbl+'<th>'+key+'</th>';
-    //         };
-    //         tbl = tbl + '</tr>'
-    //         for (var i = 0; i < features.length; i++) {
-    //             tbl = tbl+"<tr>"
-    //             // var keys = Object.keys(obj);
-    //             for (var key in features[i].properties)
-    //                 tbl = tbl+("<td>" + features[i].properties[key] + "</td>");
-    //             tbl = tbl+"</tr>"
-    //         };
-    //         tbl = tbl +'</table>';
-    //         } catch {
-    //             var tbl = '';
-    //         }
-    //         return tbl;
-    //         }
-    //     var Header = '<b>Marker Location</b>:<br>' +        
-    //     // JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]); +
-    //     e.lngLat['lat'].toPrecision(7) + e.lngLat['lng'].toPrecision(8)+
-    //     '<br><b>Selected Elements</b>:<br>' + makeTable()
-    //     // document.getElementById('features').innerHTML = displayFeatures[0].properties //makeTable(displayFeatures)
-    //     // document.getElementById('features').innerHTML = (makeTable(Header))
-    //     document.getElementById('features').innerHTML = (Header)//+makeTable())
+        function makeTable () {
+            try {
+            var tbl = ('<table><tr>');
+            for (var key in features[0].properties){
+                tbl = tbl+'<th>'+key+'</th>';
+            };
+            tbl = tbl + '</tr>'
+            for (var i = 0; i < features.length; i++) {
+                tbl = tbl+"<tr>"
+                // var keys = Object.keys(obj);
+                for (var key in features[i].properties)
+                    tbl = tbl+("<td>" + features[i].properties[key] + "</td>");
+                tbl = tbl+"</tr>"
+            };
+            tbl = tbl +'</table>';
+            } catch {
+                var tbl = '';
+            }
+            return tbl;
+            }
+        var Header = '<b>Marker Location</b>:<br>' +        
+        // JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]); +
+        e.lngLat['lat'].toPrecision(7) + e.lngLat['lng'].toPrecision(8)
+        // '<br><b>Selected Elements</b>:<br>' +
+        //  makeTable()
+        // document.getElementById('features').innerHTML = displayFeatures[0].properties //makeTable(displayFeatures)
+        // document.getElementById('features').innerHTML = (makeTable(Header))
+        document.getElementById('features').innerHTML = (Header)//+makeTable())
 
-    // // });
     // });
+    });
 
     
     map.on('idle', () => {
