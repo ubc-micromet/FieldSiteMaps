@@ -148,6 +148,7 @@ const trails = 'BB_SiteAccessTrails.geojson';
 const parking = 'Parking.geojson';
 const towers = 'FluxTowers.json';
 const chambers = 'Chambers.geojson';
+const newchambers = 'NewChambers.json';
 const grid = 'Seedling_Grid.geojson';
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/';
@@ -167,6 +168,7 @@ async function mapData(){
     const trails_geoJson = await getGeoJson(URL+trails)
     const towers_geoJson = await getGeoJson(URL+towers)
     const chambers_geoJson = await getGeoJson(URL+chambers)
+    const newchambers_geoJson = await getGeoJson(URL+newchambers)
     const parking_geoJson = await getGeoJson(URL+parking)
     const grid_geoJson = await getGeoJson(URL+grid)
 
@@ -233,6 +235,13 @@ async function mapData(){
             data: chambers_geoJson
             });
 
+        //  Add the geojson as a map source
+        map.addSource('New Chambers Layer', {
+            type: 'geojson',
+            data: newchambers_geoJson
+            });
+
+
         map.addSource('Parking Layer', {
         type: 'geojson',
         data: parking_geoJson
@@ -286,6 +295,23 @@ async function mapData(){
                 'id': 'Flux Chamber Sites',
                 'type': 'circle',
                 'source': 'Chambers Layer',
+                'layout': {
+                    // hide layer by default.
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'circle-radius': 6,
+                    'circle-color': '#fcf879',
+                    "circle-stroke-width": 1,
+                    "circle-stroke-color": 'black'
+                    },
+                });
+
+                
+    map.addLayer({
+                'id': 'New Flux Chamber Sites',
+                'type': 'circle',
+                'source': 'New Chambers Layer',
                 'layout': {
                     // hide layer by default.
                     'visibility': 'none'
@@ -423,7 +449,7 @@ async function mapData(){
     
     map.on('idle', () => {
         // Enumerate ids of the layers.
-        const toggleableLayerIds = ['Flux Towers', 'Flux Chamber Sites','Access Trails','Parking','Seedling Grid'];
+        const toggleableLayerIds = ['Flux Towers', 'New Flux Chamber Sites','Flux Chamber Sites','Access Trails','Parking','Seedling Grid'];
         
         // Set up the corresponding toggle button for each layer.
         for (const id of toggleableLayerIds) {
