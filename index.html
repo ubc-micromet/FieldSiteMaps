@@ -149,7 +149,7 @@ const parking = 'Parking.geojson';
 const towers = 'FluxTowers.json';
 const chambers = 'Chambers.geojson';
 const newchambers = 'AddedChambers.geojson';
-const grid = 'Seedling_Grid.geojson';
+const eco = 'EcoMap.geojson';
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/';
 
@@ -157,12 +157,27 @@ const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/d
 // This function allows us to read any geojson from a URL
     //  fetch() retreives data from a URL
     //   - Its an asynchronous command, returns a promise to retreive a value
+
+
+var arr = [];
+async function downloadWaypoint(data) {
+    arr.push(data)
+    var blob = new Blob([arr], {type: 'text/json'}),
+        e    = document.createEvent('MouseEvents'),
+        a    = document.createElement('a')
+
+    a.download = 'test.json'
+    a.href = window.URL.createObjectURL(blob)
+    a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+    e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+    a.dispatchEvent(e)
+}
+
 async function getGeoJson(layer) {
         const data = await fetch(layer);
         const geojson = await data.json();
         return geojson;
     };
-
 
 async function mapData(){
     const trails_geoJson = await getGeoJson(URL+trails)
@@ -170,7 +185,7 @@ async function mapData(){
     const chambers_geoJson = await getGeoJson(URL+chambers)
     const newchambers_geoJson = await getGeoJson(URL+newchambers)
     const parking_geoJson = await getGeoJson(URL+parking)
-    const grid_geoJson = await getGeoJson(URL+grid)
+    const eco_geoJson = await getGeoJson(URL+eco)
 
     //  Turf moddule allows us to get the bounding box of a geojson 
     let bbox = turf.extent(towers_geoJson);
@@ -214,9 +229,9 @@ async function mapData(){
     map.on('load', function() {
 
     //  Add the geojsons as a map sources
-        map.addSource('Grid Layer', {
+        map.addSource('Eco Layer', {
             type: 'geojson',
-            data: grid_geoJson
+            data: eco_geoJson
             });
             
         map.addSource('Trails Layer', {
@@ -241,16 +256,9 @@ async function mapData(){
             data: newchambers_geoJson
             });
 
-
-        map.addSource('Parking Layer', {
-        type: 'geojson',
-        data: parking_geoJson
-        });
-
-    map.addLayer({
-                'id': 'Seedling Grid',
+    map.addLayer({'id': 'Ecosystems',
                 'type': 'line',
-                'source': 'Grid Layer',
+                'source': 'Eco Layer',
                 'layout': {
                     // hide layer by default.
                     'visibility': 'none'
@@ -261,8 +269,7 @@ async function mapData(){
                     },
                 });
                 
-    map.addLayer({
-                'id': 'Access Trails',
+    map.addLayer({'id': 'Access Trails',
                 'type': 'line',
                 'source': 'Trails Layer',
                 'layout': {
@@ -275,8 +282,7 @@ async function mapData(){
                     },
                 });
                 
-    map.addLayer({
-                'id': 'Flux Towers',
+    map.addLayer({'id': 'Flux Towers',
                 'type': 'circle',
                 'source': 'Towers Layer',
                 'layout': {
@@ -291,8 +297,7 @@ async function mapData(){
                     },
                 });
 
-    map.addLayer({
-                'id': 'Flux Chamber Sites',
+    map.addLayer({'id': 'Flux Chamber Sites',
                 'type': 'circle',
                 'source': 'Chambers Layer',
                 'layout': {
@@ -307,9 +312,7 @@ async function mapData(){
                     },
                 });
 
-                
-    map.addLayer({
-                'id': 'New Flux Chamber Sites',
+    map.addLayer({'id': 'New Flux Chamber Sites',
                 'type': 'circle',
                 'source': 'New Chambers Layer',
                 'layout': {
@@ -323,22 +326,6 @@ async function mapData(){
                     "circle-stroke-color": 'black'
                     },
                 });
-
-    map.addLayer({
-                'id': 'Parking',
-                'type': 'circle',
-                'source': 'Parking Layer',
-                'layout': {
-                    // hide layer by default.
-                    'visibility': 'none'
-                },
-                'paint': {
-                    'circle-radius': 6,
-                    'circle-color': '#70eefa',
-                    "circle-stroke-width": 1,
-                    "circle-stroke-color": 'black'
-                    },
-                });
     
     //  Locate the user
     var geolocate = new mapboxgl.GeolocateControl({
@@ -347,18 +334,27 @@ async function mapData(){
                 },
                 trackUserLocation: true,
                 showUserHeading: true},);
+
     map.addControl(geolocate);
+
     geolocate.on('geolocate', function(e) {
         var lon = e.coords.longitude.toPrecision(8);
         var lat = e.coords.latitude.toPrecision(7);
         var position = [lat, lon];
+
+        data = JSON.stringify(position);
+
+        downloadWaypoint(position);
+
         document.getElementById('features').innerHTML =
         // `e.point` is the x, y coordinates of the `mousemove` event
         // relative to the top-left corner of the map.
-        JSON.stringify(e.point) +
+        // JSON.stringify(e.point) +
         'Current Location:<br>' +
         // `e.lngLat` is the longitude, latitude geographical position of the event.
-        JSON.stringify(position);
+        data;
+
+        
     });
 
 
@@ -384,6 +380,7 @@ async function mapData(){
         console.log('Lng:', coordinates.lng, 'Lat:', coordinates.lat);
         marker.setLngLat(coordinates).addTo(map);
         }
+
     map.on('click', 'Flux Towers', (e) => {
         // Copy coordinates array.
         const coordinates = e.features[0].geometry.coordinates.slice();
@@ -407,49 +404,50 @@ async function mapData(){
         .setHTML(description)
         .addTo(map);
         });
+
     // // Display desired attributes on click
-    map.on('click', (e) => {
-        // Add the marker (show where the click is)
-        add_marker(e);
+    // map.on('click', (e) => {
+    //     // Add the marker (show where the click is)
+    //     add_marker(e);
 
-        // Get features at point click
-        var features = '' ;
-        features = map.queryRenderedFeatures(e.point, );
+    //     // Get features at point click
+    //     var features = '' ;
+    //     features = map.queryRenderedFeatures(e.point, );
        
-        // Create the table
+    //     // Create the table
 
-        function makeTable () {
-            try {
-            var tbl = ('<table><tr>');
-            for (var key in features[0].properties){
-                tbl = tbl+'<th>'+key+'</th>';
-            };
-            tbl = tbl + '</tr>'
-            for (var i = 0; i < features.length; i++) {
-                tbl = tbl+"<tr>"
-                // var keys = Object.keys(obj);
-                for (var key in features[i].properties)
-                    tbl = tbl+("<td>" + features[i].properties[key] + "</td>");
-                tbl = tbl+"</tr>"
-            };
-            tbl = tbl +'</table>';
-            } catch {
-                var tbl = '';
-            }
-            return tbl;
-            }
-        var Header = '<b>Marker Location</b>:<br>' +        
-        // JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]); +
-        e.lngLat['lat'].toPrecision(7) + e.lngLat['lng'].toPrecision(8)
-        document.getElementById('features').innerHTML = (Header)//+makeTable())
+    //     function makeTable () {
+    //         try {
+    //         var tbl = ('<table><tr>');
+    //         for (var key in features[0].properties){
+    //             tbl = tbl+'<th>'+key+'</th>';
+    //         };
+    //         tbl = tbl + '</tr>'
+    //         for (var i = 0; i < features.length; i++) {
+    //             tbl = tbl+"<tr>"
+    //             // var keys = Object.keys(obj);
+    //             for (var key in features[i].properties)
+    //                 tbl = tbl+("<td>" + features[i].properties[key] + "</td>");
+    //             tbl = tbl+"</tr>"
+    //         };
+    //         tbl = tbl +'</table>';
+    //         } catch {
+    //             var tbl = '';
+    //         }
+    //         return tbl;
+    //         }
+    //     var Header = '<b>Marker Location</b>:<br>' +        
+    //     // JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]); +
+    //     e.lngLat['lat'].toPrecision(7) + e.lngLat['lng'].toPrecision(8)
+    //     document.getElementById('features').innerHTML = (Header)//+makeTable())
 
+    // // });
     // });
-    });
 
     
     map.on('idle', () => {
         // Enumerate ids of the layers.
-        const toggleableLayerIds = ['Flux Towers', 'New Flux Chamber Sites','Flux Chamber Sites','Access Trails','Seedling Grid'];
+        const toggleableLayerIds = ['Flux Towers', 'New Flux Chamber Sites','Flux Chamber Sites','Access Trails','Ecosystems'];
         
         // Set up the corresponding toggle button for each layer.
         for (const id of toggleableLayerIds) {
