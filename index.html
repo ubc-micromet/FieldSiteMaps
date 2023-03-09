@@ -72,7 +72,7 @@
         background-color: #3386c0;
         color: #fff;
         position: absolute;
-        bottom: 20px;
+        bottom: 2%;
         right: 0%;
         z-index: 1;
         border: none;
@@ -82,6 +82,24 @@
         border-radius: 3px;
     }
     .btn-waypt:hover {
+        background-color: #4ea0da;
+    }
+
+    .btn-track {
+        font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        background-color: #3386c0;
+        color: #fff;
+        position: absolute;
+        bottom: 10%;
+        right: 0%;
+        z-index: 1;
+        border: none;
+        display: block;
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 3px;
+    }
+    .btn-track:hover {
         background-color: #4ea0da;
     }
 
@@ -154,6 +172,7 @@
 <button id="zoomto" class="btn-control">Zoom to Sites</button>
 <button id="homepage" class="btn-home">Source<br>Code</button>
 <button id="waypoint" class="btn-waypt">Log Waypoint</button>
+<button id="track" class="btn-track">Record Track</button>
 <pre id="features"></pre>
 <pre id="json"></pre>
 <script>
@@ -170,26 +189,43 @@ const eco = 'EcoMap.geojson';
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/';
 
-
-// This function allows us to read any geojson from a URL
-    //  fetch() retreives data from a URL
-    //   - Its an asynchronous command, returns a promise to retreive a value
-
-
-var arr = [];
+function average(elmt){
+    var sum = 0;
+    for( var i = 0; i < elmt.length; i++ ){
+        sum += parseFloat( elmt[i], 10 ); //don't forget to add the base
+    }
+    var avg = sum/elmt.length
+    return avg;
+    ;
+}
+    
+var X_arr = [];
+var Y_arr = [];
 var download = false
 async function downloadWaypoint(data) {
-    arr.push(data)
-    var blob = new Blob([arr], {type: 'text/json'}),
-        e    = document.createEvent('MouseEvents'),
-        a    = document.createElement('a')
+    X_arr.push(data[1]);
+    Y_arr.push(data[0]);
+    if (X_arr.length == 2){
+        X_avg = average(X_arr)
+        Y_avg = average(Y_arr)
+        var blob = new Blob([X_avg,',',Y_avg], {type: 'text/json'}),
+            e    = document.createEvent('MouseEvents'),
+            a    = document.createElement('a')
 
-    a.download = 'test.json'
-    a.href = window.URL.createObjectURL(blob)
-    a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-    e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-    a.dispatchEvent(e)
+        a.download = 'test.json'
+        a.href = window.URL.createObjectURL(blob)
+        a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+        a.dispatchEvent(e)
+
+    }
+    
 }
+
+// This function allows us to read any geojson from a URL
+//      fetch() retreives data from a URL
+//       - Its an asynchronous command, returns a promise to retreive a value
+
 
 async function getGeoJson(layer) {
         const data = await fetch(layer);
@@ -353,8 +389,7 @@ async function mapData(){
         data;
     });
 
-    map.addControl(new mapboxgl.NavigationControl());
-    
+    map.addControl(new mapboxgl.NavigationControl());  
 
     // Call fit when clicking the zoomto button
     document.getElementById('waypoint').addEventListener('click', () => {
@@ -363,7 +398,19 @@ async function mapData(){
         setTimeout(function() {
             download = false;
             geolocate.trigger();
-            }, 10000);
+            }, 20000);
+        // download = false;
+    });
+
+    
+    // Call fit when clicking the zoomto button
+    document.getElementById('track').addEventListener('click', () => {
+        download= true
+        geolocate.trigger();
+        setTimeout(function() {
+            download = false;
+            geolocate.trigger();
+            }, 60000);
         // download = false;
     });
 
@@ -451,7 +498,6 @@ async function mapData(){
 
     // // });
     // });
-
     
     map.on('idle', () => {
         // Enumerate ids of the layers.
