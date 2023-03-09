@@ -172,7 +172,7 @@
 <button id="zoomto" class="btn-control">Zoom to Sites</button>
 <button id="homepage" class="btn-home">Source<br>Code</button>
 <button id="waypoint" class="btn-waypt">Log Waypoint</button>
-<button id="track" class="btn-track">Record Track</button>
+<!-- <button id="track" class="btn-track">Record Track</button> -->
 <pre id="features"></pre>
 <pre id="json"></pre>
 <script>
@@ -211,15 +211,12 @@ async function downloadWaypoint(data) {
         var blob = new Blob([X_avg,',',Y_avg], {type: 'text/json'}),
             e    = document.createEvent('MouseEvents'),
             a    = document.createElement('a')
-
         a.download = 'test.json'
         a.href = window.URL.createObjectURL(blob)
         a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
         e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
         a.dispatchEvent(e)
-
     }
-    
 }
 
 // This function allows us to read any geojson from a URL
@@ -403,16 +400,16 @@ async function mapData(){
     });
 
     
-    // Call fit when clicking the zoomto button
-    document.getElementById('track').addEventListener('click', () => {
-        download= true
-        geolocate.trigger();
-        setTimeout(function() {
-            download = false;
-            geolocate.trigger();
-            }, 60000);
-        // download = false;
-    });
+    // // Call fit when clicking the zoomto button
+    // document.getElementById('track').addEventListener('click', () => {
+    //     download= true
+    //     geolocate.trigger();
+    //     setTimeout(function() {
+    //         download = false;
+    //         geolocate.trigger();
+    //         }, 60000);
+    //     // download = false;
+    // });
 
     // Call fit when clicking the zoomto button
     document.getElementById('zoomto').addEventListener('click', () => {
