@@ -187,8 +187,13 @@ const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/d
 
 
 // Enumerate ids of the layers.
-const SiteIds = ['BB Sites','DSM','RBM'];
-const Sites = [towers,chambers,parking]
+const SiteIds = ['BB1','BB2','DSM','RBM'];
+// const Sites = [towers,chambers,parking]
+var Sites = [];
+for( var i = 0; i < SiteIds.length; i++ ){
+        Sites.push(SiteIds[i]+'.geojson');
+    }
+console.log(Sites)
 
 // Calculate an average
 function average(elmt){
