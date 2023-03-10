@@ -13,17 +13,15 @@
 	body { margin: 0; padding: 0;}
 	#map { position: absolute; top: 0; bottom: 0; width: 100%;}
 	#map canvas {cursor: crosshair;}
-	#features {
+	/* #features {
 			position: absolute;
-			/* top: 0; */
 			right: 0;
 			bottom: 0;
 			width: 100%;
-            /* margin: 10px; */
             text-align: center;
 			height: 10%;
 			overflow: scroll;
-			background: rgba(255, 255, 255, 0.7);}
+			background: rgba(255, 255, 255, 0.7);} */
 
     /* Control the zoom to button */
     .btn-control {
@@ -45,7 +43,6 @@
     .btn-control:hover {
         background-color: #4ea0da;
     }
-
     /* Control the Github Link button */
     .btn-home {
         font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
@@ -64,7 +61,6 @@
     .btn-home:hover {
         background-color: #4ea0da;
     }
-
     
     /* Control the Github Link button */
     .btn-waypt {
@@ -173,7 +169,7 @@
 <button id="homepage" class="btn-home">Source<br>Code</button>
 <button id="waypoint" class="btn-waypt">Log Waypoint</button>
 <!-- <button id="track" class="btn-track">Record Track</button> -->
-<pre id="features"></pre>
+<!-- <pre id="features"></pre> -->
 <pre id="json"></pre>
 <script>
 	mapboxgl.accessToken = 'pk.eyJ1IjoianVuZXNwYWNlYm9vdHMiLCJhIjoiY2twY3g4aXloMWFlcDJzbXN3aG95aG5uZiJ9.mFiJt0MIfL1MiJ2rB2xhKQ';
@@ -189,238 +185,70 @@ const eco = 'EcoMap.geojson';
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/';
 
+
+// Enumerate ids of the layers.
+const SiteIds = ['BB Sites','DSM','RBM'];
+
+// Calculate an average
 function average(elmt){
     var sum = 0;
     for( var i = 0; i < elmt.length; i++ ){
-        sum += parseFloat( elmt[i], 10 ); //don't forget to add the base
+        sum += parseFloat( elmt[i]);
     }
     var avg = sum/elmt.length
     return avg;
     ;
 }
     
-var X_arr = [];
-var Y_arr = [];
-var download = false
+var lon = [];
+var lat = [];
+var time = [];
+function waypoint(coords) {
+    var record = {};
+    var id = 0;
+    var point_coords = {"type":"Point","coordinates":[]};
+    var point_object = {"type":"Feature","id":[],"geometry":[],"properties":{"time":[]}};
+    lon.push(coords.longitude.toPrecision(8));
+    lat.push(coords.latitude.toPrecision(7));
+    time.push(Date.now());
+    point_coords['coordinates']=[average(lon),average(lat)];
+    point_object['id']=id
+    point_object['geometry']=point_coords
+    point_object['properties']['time']=average(time)
+    record = JSON.stringify(point_object);
+    return record;
+};
 
+//  Locate the user
+var geolocate = new mapboxgl.GeolocateControl({
+    positionOptions: {
+    enableHighAccuracy: true
+    },
+    trackUserLocation: true,
+    showUserHeading: true},);
 
-// async function downloadWaypoint(data) {
-    // X_arr.push(data[1]);
-    // Y_arr.push(data[0]);
-    // if (X_arr.length == 2){
-    //     X_avg = average(X_arr)
-    //     Y_avg = average(Y_arr)
-    //     var blob = new Blob([X_avg,',',Y_avg], {type: 'text/json'}),
-    //         e    = document.createEvent('MouseEvents'),
-    //         a    = document.createElement('a')
-    //     a.download = 'test.json'
-    //     a.href = window.URL.createObjectURL(blob)
-    //     a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-    //     e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-    //     a.dispatchEvent(e)
-    
+// var timestamp = [];
+geolocate.on('geolocate', function(e) {
+        if (download == true) {
+            record = waypoint(e.coords);
+        }}
+);
 
-//     var blob = new Blob([data], {type: 'text/json'}),
-//         e    = document.createEvent('MouseEvents'),
-//         a    = document.createElement('a')
-//     a.download = 'test.json'
-//     a.href = window.URL.createObjectURL(blob)
-//     a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-//     e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-//         a.dispatchEvent(e)
-
-//     }
-// // }
-
-// This function allows us to read any geojson from a URL
-//      fetch() retreives data from a URL
-//       - Its an asynchronous command, returns a promise to retreive a value
-
-
+// get geojson layer from github
 async function getGeoJson(layer) {
         const data = await fetch(layer);
         const geojson = await data.json();
         return geojson;
     };
 
-async function mapData(){
-    const trails_geoJson = await getGeoJson(URL+trails)
-    const towers_geoJson = await getGeoJson(URL+towers)
-    const chambers_geoJson = await getGeoJson(URL+chambers)
-    // const newchambers_geoJson = await getGeoJson(URL+newchambers)
-    const parking_geoJson = await getGeoJson(URL+parking)
-    const eco_geoJson = await getGeoJson(URL+eco)
-
-    //  Turf moddule allows us to get the bounding box of a geojson 
-    let bbox = turf.extent(towers_geoJson);
-    //  fit() will fit the map to the bounding box of our geojson
-    function fit() {
-                    map.fitBounds(bbox, {padding: 140});
-                    };
-
-    //  Custom mapStyle lest us use ESRI raster tiles
-    const mapStyle = {
-        version: 8,
-        sources: {
-        worldImagery: {
-            type: "raster",
-            tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-            tileSize: 256
-            }
-        },
-        layers: [{
-            id: "worldImagery",
-            type: "raster",
-            source: "worldImagery",
-            minzoom: 0,
-            maxzoom: 22
-            }
-        ]
-    };
-
-    //  Create the map - zoom and center are "arbitrary"
-    const map = new mapboxgl.Map({
-                container: 'map',
-                zoom: 11,
-                center: [-122.998, 49.135],
-                style: mapStyle,
-                });
-                
-    //  Fit to bbox of flux towers, overwrite the center/zoom
-    fit();
-
-    //  On load - add geojson
-    map.on('load', function() {
-
-    //  Add the geojsons as a map sources
-    map.addSource('Eco Layer', {
-        type: 'geojson',
-        data: eco_geoJson
-        });
-        
-    map.addSource('Trails Layer', {
-        type: 'geojson',
-        data: trails_geoJson
-        });
-    
-    map.addSource('Towers Layer', {
-        type: 'geojson',
-        data: towers_geoJson
-        });
-
-    //  Add the geojson as a map source
-    map.addSource('Chambers Layer', {
-            type: 'geojson',
-            data: chambers_geoJson
-            });
-
-    map.addLayer({'id': 'Ecosystems',
-                'type': 'line',
-                'source': 'Eco Layer',
-                'layout': {
-                    // hide layer by default.
-                    'visibility': 'none'
-                },
-                    'paint': {
-                        'line-color': ['get', 'color'],
-                        'line-width': 2
-                    },
-                });
-                
-    map.addLayer({'id': 'Access Trails',
-                'type': 'line',
-                'source': 'Trails Layer',
-                'layout': {
-                    // hide layer by default.
-                    'visibility': 'none'
-                },
-                    'paint': {
-                        'line-color': 'red',
-                        'line-width': 2
-                    },
-                });
-                
-    map.addLayer({'id': 'Flux Towers',
-                'type': 'circle',
-                'source': 'Towers Layer',
-                'layout': {
-                    // hide layer by default.
-                    'visibility': 'visible'
-                },
-                'paint': {
-                    'circle-radius': 6,
-                    'circle-color': '#fc79fa',
-                    "circle-stroke-width": 1,
-                    "circle-stroke-color": 'black'
-                    },
-                });
-
-    map.addLayer({'id': 'Chamber Sites',
-                'type': 'circle',
-                'source': 'Chambers Layer',
-                'layout': {
-                    // hide layer by default.
-                    'visibility': 'none'
-                },
-                'paint': {
-                    'circle-radius': 6,
-                    'circle-color': '#fcf879',
-                    "circle-stroke-width": 1,
-                    "circle-stroke-color": 'black'
-                    },
-                });
-
-    //  Locate the user
-    var geolocate = new mapboxgl.GeolocateControl({
-                positionOptions: {
-                enableHighAccuracy: true
-                },
-                trackUserLocation: true,
-                showUserHeading: true},);
-
-    map.addControl(geolocate);
-
-
-//     async function waypoint(data) {
-//     X_arr.push(data[1]);
-//     Y_arr.push(data[0]);
-//     if (X_arr.length == 2){
-//         X_avg = average(X_arr)
-//         Y_avg = average(Y_arr)
-//         const timestamp = Date.now();
-//         var blob = new Blob([timestamp,',',X_avg,',',Y_avg], {type: 'text/json'}),
-//             e    = document.createEvent('MouseEvents'),
-//             a    = document.createElement('a')
-//         a.download = 'test.json'
-//         a.href = window.URL.createObjectURL(blob)
-//         a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-//         e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-//         a.dispatchEvent(e)
-//     }
-//     var X_arr = [];
-//     var Y_arr = [];
-// }
-
-
-
-    var lon = [];
-    var lat = [];
-    // var timestamp = [];
-    geolocate.on('geolocate', function(e) {
-
-        x = e.coords.longitude.toPrecision(8)
-        y = e.coords.latitude.toPrecision(7)
-        lon.push(x);
-        lat.push(y);
-        var timestamp = Date.now();
-
-        // if (lon.length == 2){
-        lon_avg = average(lon);
-        lat_avg = average(lat);
-        var record = JSON.stringify({'timestamp':timestamp,
-                                'X_avg':lon_avg,
-                                'Y_avg':lat_avg});
-
+// Don't download by default on geolocate
+var download = false;
+// Only download when prompted
+document.getElementById('waypoint').addEventListener('click', () => {
+    download= true
+    geolocate.trigger();
+    setTimeout(function() {
+        // console.log(point_object)
         var blob = new Blob([record], {type: 'text/json'}),
             e    = document.createEvent('MouseEvents'),
             a    = document.createElement('a')
@@ -429,166 +257,155 @@ async function mapData(){
         a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
         e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
         a.dispatchEvent(e)
-       
-        document.getElementById('features').innerHTML =blob;
-            // }
-        });
+        download = false;
+        console.log(record);
+        }, 2000);
+    download = false;
+});
 
-    map.addControl(new mapboxgl.NavigationControl());  
+//  Custom mapStyle lest us use ESRI raster tiles
+const mapStyle = {
+    version: 8,
+    sources: {
+    worldImagery: {
+        type: "raster",
+        tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+        tileSize: 256
+        }
+    },
+    layers: [{
+        id: "worldImagery",
+        type: "raster",
+        source: "worldImagery",
+        minzoom: 0,
+        maxzoom: 22
+        }
+    ]
+};
 
-    // Call fit when clicking the zoomto button
-    document.getElementById('waypoint').addEventListener('click', () => {
-        download= true
+//  Create the map - zoom and center are "arbitrary"
+const map = new mapboxgl.Map({
+            container: 'map',
+            zoom: 11,
+            center: [-122.998, 49.135],
+            style: mapStyle,
+            });
+
+map.addControl(geolocate);
+map.addControl(new mapboxgl.NavigationControl());  
+
+async function mapData(site){
+
+    const site_data = await getGeoJson(URL+site)
+    const site_name = 'name'
+    //  On load - add geojson
+    map.on('load', function() {
         geolocate.trigger();
-        setTimeout(function() {
-            download = false;
-            geolocate.trigger();
-            }, 20000);
-        // download = false;
-    });
-
-    
-    // // Call fit when clicking the zoomto button
-    // document.getElementById('track').addEventListener('click', () => {
-    //     download= true
-    //     geolocate.trigger();
-    //     setTimeout(function() {
-    //         download = false;
-    //         geolocate.trigger();
-    //         }, 60000);
-    //     // download = false;
-    // });
-
-    // Call fit when clicking the zoomto button
-    document.getElementById('zoomto').addEventListener('click', () => {
-        fit()
-    });
-    
-
-    // Call fit when clicking the zoomto button
-    document.getElementById('homepage').addEventListener('click', () => {
-        window.open('https://github.com/ubc-micromet/FieldSiteMaps');
-    });
-
-    });
-
-    // Create an empty marker
-    const marker = new mapboxgl.Marker();
-    // Function to add the marker
-    function add_marker (event) {
-        var coordinates = event.lngLat;
-        console.log('Lng:', coordinates.lng, 'Lat:', coordinates.lat);
-        marker.setLngLat(coordinates).addTo(map);
-        }
-
-    map.on('click', 'Flux Towers', (e) => {
-        // Copy coordinates array.
-        const coordinates = e.features[0].geometry.coordinates.slice();
-        const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
-        '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
-        '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision(7)+'</td></tr>'+
-        '<tr><td><b>First Year</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
-        '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
-        '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
-        '</table>';
-        
-        // Ensure that if the map is zoomed out such that multiple
-        // copies of the feature are visible, the popup appears
-        // over the copy being pointed to.
-        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-        }
-        
-        new mapboxgl.Popup()
-        .setLngLat(coordinates)
-        .setHTML(description)
-        .addTo(map);
+        // Call fit when clicking the zoomto button
+        document.getElementById('zoomto').addEventListener('click', () => {
+            fit()
         });
-
-    // // Display desired attributes on click
-    // map.on('click', (e) => {
-    //     // Add the marker (show where the click is)
-    //     add_marker(e);
-
-    //     // Get features at point click
-    //     var features = '' ;
-    //     features = map.queryRenderedFeatures(e.point, );
-       
-    //     // Create the table
-
-    //     function makeTable () {
-    //         try {
-    //         var tbl = ('<table><tr>');
-    //         for (var key in features[0].properties){
-    //             tbl = tbl+'<th>'+key+'</th>';
-    //         };
-    //         tbl = tbl + '</tr>'
-    //         for (var i = 0; i < features.length; i++) {
-    //             tbl = tbl+"<tr>"
-    //             // var keys = Object.keys(obj);
-    //             for (var key in features[i].properties)
-    //                 tbl = tbl+("<td>" + features[i].properties[key] + "</td>");
-    //             tbl = tbl+"</tr>"
-    //         };
-    //         tbl = tbl +'</table>';
-    //         } catch {
-    //             var tbl = '';
-    //         }
-    //         return tbl;
-    //         }
-    //     var Header = '<b>Marker Location</b>:<br>' +        
-    //     // JSON.stringify([e.lngLat['lng'].toPrecision(8),e.lngLat['lat'].toPrecision(7)]); +
-    //     e.lngLat['lat'].toPrecision(7) + e.lngLat['lng'].toPrecision(8)
-    //     document.getElementById('features').innerHTML = (Header)//+makeTable())
-
-    // // });
-    // });
-    
-    map.on('idle', () => {
-        // Enumerate ids of the layers.
-        const toggleableLayerIds = ['Flux Towers', 'Chamber Sites','Access Trails','Ecosystems'];
         
+        // Call fit when clicking the zoomto button
+        document.getElementById('homepage').addEventListener('click', () => {
+            window.open('https://github.com/ubc-micromet/FieldSiteMaps');
+        });
+    });
+
+
+         
+    // map.on('click', 'Flux Towers', (e) => {
+    //     // Copy coordinates array.
+    //     const coordinates = e.features[0].geometry.coordinates.slice();
+    //     const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
+    //     '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
+    //     '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision(7)+'</td></tr>'+
+    //     '<tr><td><b>First Year</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
+    //     '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
+    //     '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
+    //     '</table>';
+        
+    //     // Ensure that if the map is zoomed out such that multiple
+    //     // copies of the feature are visible, the popup appears
+    //     // over the copy being pointed to.
+    //     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    //     }
+        
+    //     new mapboxgl.Popup()
+    //     .setLngLat(coordinates)
+    //     .setHTML(description)
+    //     .addTo(map);
+    //     });
+
+    map.on('idle', () => {
+
+
+        //  Turf moddule allows us to get the bounding box of a geojson 
+        let bbox = turf.extent(site_data);
+
+        // fit zom to the bounding box of whichever layers are loaded
+        function fit() {
+                        map.fitBounds(bbox, {padding: 140});
+                        };
+        
+        map.addSource(site_name, {
+        type: 'geojson',
+        data: site_data
+        });
+                
+        map.addLayer({'id': 'BB Sites',
+                'type': 'circle',
+            'source': site_name,
+            'layout': {
+                'visibility': 'none'
+            },
+            'paint': {
+                'circle-radius': 6,
+                'circle-color': '#fc79fa',
+                "circle-stroke-width": 1,
+                "circle-stroke-color": 'black'
+                },
+            });
+
         // Set up the corresponding toggle button for each layer.
-        for (const id of toggleableLayerIds) {
+        for (const id of SiteIds) {
         // Skip layers that already have a button set up.
             if (document.getElementById(id)) {
             continue;
             }
-        
             // Create a link.
             const link = document.createElement('a');
             link.id = id;
             link.href = '#';
             link.textContent = id;
-            // Only Flux Towers is active by default
-            if (id === 'Flux Towers'){
-                link.className = 'active';
-            }
         
             // Show or hide layer when the toggle is clicked.
             link.onclick = function (e) {
-            const clickedLayer = this.textContent;
-            e.preventDefault();
-            e.stopPropagation();
-        
-            const visibility = map.getLayoutProperty(
-            clickedLayer,
-            'visibility'
-            );
-        
-        // Toggle layer visibility by changing the layout object's visibility property.
-        if (visibility === 'visible') {
-            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
-            this.className = '';
-            } else {
-            this.className = 'active';
-            map.setLayoutProperty(
-            clickedLayer,
-            'visibility',
-            'visible'
-            );
-            }
-        };
+                const clickedLayer = this.textContent;
+                e.preventDefault();
+                e.stopPropagation();
+            
+                const visibility = map.getLayoutProperty(
+                    clickedLayer,
+                    'visibility'
+                    );
+            
+                // Toggle layer visibility by changing the layout object's visibility property.
+                if (visibility === 'visible') {
+                    map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                    this.className = '';
+                    } else {
+                    //  Fit to bbox of flux towers, overwrite the center/zoom
+                    fit();
+                    this.className = 'active';
+                    map.setLayoutProperty(
+                    clickedLayer,
+                    'visibility',
+                    'visible'
+                    );
+                    }
+            };
         
         const layers = document.getElementById('menu');
         layers.appendChild(link);
@@ -599,7 +416,7 @@ async function mapData(){
 };
 
 // Call mapData() to initalize the map
-mapData();
+mapData(towers);
 
 </script>
  
