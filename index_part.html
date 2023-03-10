@@ -222,9 +222,9 @@ function waypoint(coords) {
 
 // get geojson layer from github
 async function getGeoJson(layer) {
-        const data = await fetch(layer);
-        const geojson = await data.json();
-        return geojson;
+    const data = await fetch(layer);
+    const geojson = await data.json();
+    return geojson;
     };
 
 // Don't download by default on geolocate

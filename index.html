@@ -188,6 +188,7 @@ const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/d
 
 // Enumerate ids of the layers.
 const SiteIds = ['BB Sites','DSM','RBM'];
+const Sites = [towers,chambers,parking]
 
 // Calculate an average
 function average(elmt){
@@ -294,12 +295,41 @@ const map = new mapboxgl.Map({
 map.addControl(geolocate);
 map.addControl(new mapboxgl.NavigationControl());  
 
-async function mapData(site){
+async function mapData(){
 
-    const site_data = await getGeoJson(URL+site)
-    const site_name = 'name'
+    const site_data = []
+    
+    console.log(site_data)
+    
+    // const site_name = 'name'
     //  On load - add geojson
-    map.on('load', function() {
+    map.on('load', async function() {
+
+        for (var i = 0; i < SiteIds.length; i++) {
+            var layer = await getGeoJson(URL+Sites[i]);
+            site_data.push(layer);
+            console.log(site_data)
+         
+            map.addSource(SiteIds[i], {
+            type: 'geojson',
+            data: site_data[i]
+            });
+                    
+            map.addLayer({'id': SiteIds[i],
+                'type': 'circle',
+                'source': SiteIds[i],
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'circle-radius': 6,
+                    'circle-color': '#fc79fa',
+                    "circle-stroke-width": 1,
+                    "circle-stroke-color": 'black'
+                    },
+                });
+        };
+
         geolocate.trigger();
         // Call fit when clicking the zoomto button
         document.getElementById('zoomto').addEventListener('click', () => {
@@ -341,32 +371,6 @@ async function mapData(site){
     map.on('idle', () => {
 
 
-        //  Turf moddule allows us to get the bounding box of a geojson 
-        let bbox = turf.extent(site_data);
-
-        // fit zom to the bounding box of whichever layers are loaded
-        function fit() {
-                        map.fitBounds(bbox, {padding: 140});
-                        };
-        
-        map.addSource(site_name, {
-        type: 'geojson',
-        data: site_data
-        });
-                
-        map.addLayer({'id': 'BB Sites',
-                'type': 'circle',
-            'source': site_name,
-            'layout': {
-                'visibility': 'none'
-            },
-            'paint': {
-                'circle-radius': 6,
-                'circle-color': '#fc79fa',
-                "circle-stroke-width": 1,
-                "circle-stroke-color": 'black'
-                },
-            });
 
         // Set up the corresponding toggle button for each layer.
         for (const id of SiteIds) {
@@ -383,6 +387,7 @@ async function mapData(site){
             // Show or hide layer when the toggle is clicked.
             link.onclick = function (e) {
                 const clickedLayer = this.textContent;
+                console.log(clickedLayer)
                 e.preventDefault();
                 e.stopPropagation();
             
@@ -396,8 +401,16 @@ async function mapData(site){
                     map.setLayoutProperty(clickedLayer, 'visibility', 'none');
                     this.className = '';
                     } else {
-                    //  Fit to bbox of flux towers, overwrite the center/zoom
-                    fit();
+
+                    // let bbox = turf.extent(clickedLayer);
+
+                    // // fit zom to the bounding box of whichever layers are loaded
+                    // function fit() {
+                    //     map.fitBounds(bbox, {padding: 140});
+                    //     };
+        
+                    //  Fit to bbox of activated layers
+                    // fit();
                     this.className = 'active';
                     map.setLayoutProperty(
                     clickedLayer,
@@ -416,7 +429,7 @@ async function mapData(site){
 };
 
 // Call mapData() to initalize the map
-mapData(towers);
+mapData();
 
 </script>
  
