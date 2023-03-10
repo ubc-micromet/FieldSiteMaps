@@ -13,36 +13,7 @@
 	body { margin: 0; padding: 0;}
 	#map { position: absolute; top: 0; bottom: 0; width: 100%;}
 	#map canvas {cursor: crosshair;}
-	/* #features {
-			position: absolute;
-			right: 0;
-			bottom: 0;
-			width: 100%;
-            text-align: center;
-			height: 10%;
-			overflow: scroll;
-			background: rgba(255, 255, 255, 0.7);} */
 
-    /* Control the zoom to button */
-    .btn-control {
-        font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-        background-color: #3386c0;
-        color: #fff;
-        position: absolute;
-        top: 20px;
-        left: 50%;
-        z-index: 1;
-        border: none;
-        /* width: 200px; */
-        margin-left: -100px;
-        display: block;
-        cursor: pointer;
-        padding: 10px;
-        border-radius: 3px;
-    }
-    .btn-control:hover {
-        background-color: #4ea0da;
-    }
     /* Control the Github Link button */
     .btn-home {
         font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
@@ -107,12 +78,10 @@
 
     table {
         border-collapse: collapse;
-        /* table-layout: fixed; */
         width: 100%;
       }
-      td {
+    td {
         border: solid 1px #666;
-        /* width: 20%; */
         max-width:10%;
         word-break: break-all
       }
@@ -164,36 +133,21 @@
 <body>
 <nav id="menu"></nav>
 <div id="map"></div>
-<!-- Added a zoom to button -->
-<button id="zoomto" class="btn-control">Zoom to Sites</button>
 <button id="homepage" class="btn-home">Source<br>Code</button>
 <button id="waypoint" class="btn-waypt">Log Waypoint</button>
-<!-- <button id="track" class="btn-track">Record Track</button> -->
-<!-- <pre id="features"></pre> -->
 <pre id="json"></pre>
 <script>
-	mapboxgl.accessToken = 'pk.eyJ1IjoianVuZXNwYWNlYm9vdHMiLCJhIjoiY2twY3g4aXloMWFlcDJzbXN3aG95aG5uZiJ9.mFiJt0MIfL1MiJ2rB2xhKQ';
-    // Replace access token!
+// Replace access token!
+mapboxgl.accessToken = 'pk.eyJ1IjoianVuZXNwYWNlYm9vdHMiLCJhIjoiY2twY3g4aXloMWFlcDJzbXN3aG95aG5uZiJ9.mFiJt0MIfL1MiJ2rB2xhKQ';
 
-// Location of the geojsons
-const trails = 'BB_SiteAccessTrails.geojson';
-const parking = 'Parking.geojson';
-const towers = 'FluxTowers.json';
-const chambers = 'Chambers.geojson';
-// const newchambers = 'AddedChambers.geojson';
-const eco = 'EcoMap.geojson';
+const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/Surveying/data/';
 
-const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/data/';
-
-
-// Enumerate ids of the layers.
+// Define Sites
 const SiteIds = ['BB1','BB2','DSM','RBM'];
-// const Sites = [towers,chambers,parking]
 var Sites = [];
 for( var i = 0; i < SiteIds.length; i++ ){
         Sites.push(SiteIds[i]+'.geojson');
     }
-console.log(Sites)
 
 // Calculate an average
 function average(elmt){
@@ -209,8 +163,8 @@ function average(elmt){
 var lon = [];
 var lat = [];
 var time = [];
+var record = {};
 function waypoint(coords) {
-    var record = {};
     var id = 0;
     var point_coords = {"type":"Point","coordinates":[]};
     var point_object = {"type":"Feature","id":[],"geometry":[],"properties":{"time":[]}};
@@ -251,10 +205,12 @@ async function getGeoJson(layer) {
 var download = false;
 // Only download when prompted
 document.getElementById('waypoint').addEventListener('click', () => {
-    download= true
-    geolocate.trigger();
+    download= true;
+    console.log(geolocate.trigger());
+    if (geolocate.trigger() == false){
+        geolocate.trigger()};
     setTimeout(function() {
-        // console.log(point_object)
+        // console.log(record)
         var blob = new Blob([record], {type: 'text/json'}),
             e    = document.createEvent('MouseEvents'),
             a    = document.createElement('a')
@@ -264,7 +220,6 @@ document.getElementById('waypoint').addEventListener('click', () => {
         e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
         a.dispatchEvent(e)
         download = false;
-        console.log(record);
         }, 2000);
     download = false;
 });
@@ -303,23 +258,21 @@ map.addControl(new mapboxgl.NavigationControl());
 async function mapData(){
 
     const site_data = []
-    
-    console.log(site_data)
-    
+        
     // const site_name = 'name'
     //  On load - add geojson
     map.on('load', async function() {
 
+        // Add each layer as an invisible layer
         for (var i = 0; i < SiteIds.length; i++) {
             var layer = await getGeoJson(URL+Sites[i]);
             site_data.push(layer);
-            console.log(site_data)
          
             map.addSource(SiteIds[i], {
             type: 'geojson',
             data: site_data[i]
             });
-                    
+              
             map.addLayer({'id': SiteIds[i],
                 'type': 'circle',
                 'source': SiteIds[i],
@@ -336,10 +289,6 @@ async function mapData(){
         };
 
         geolocate.trigger();
-        // Call fit when clicking the zoomto button
-        document.getElementById('zoomto').addEventListener('click', () => {
-            fit()
-        });
         
         // Call fit when clicking the zoomto button
         document.getElementById('homepage').addEventListener('click', () => {
@@ -347,8 +296,7 @@ async function mapData(){
         });
     });
 
-
-         
+        
     // map.on('click', 'Flux Towers', (e) => {
     //     // Copy coordinates array.
     //     const coordinates = e.features[0].geometry.coordinates.slice();
@@ -375,8 +323,6 @@ async function mapData(){
 
     map.on('idle', () => {
 
-
-
         // Set up the corresponding toggle button for each layer.
         for (const id of SiteIds) {
         // Skip layers that already have a button set up.
@@ -392,10 +338,8 @@ async function mapData(){
             // Show or hide layer when the toggle is clicked.
             link.onclick = function (e) {
                 const clickedLayer = this.textContent;
-                console.log(clickedLayer)
                 e.preventDefault();
-                e.stopPropagation();
-            
+                e.stopPropagation();    
                 const visibility = map.getLayoutProperty(
                     clickedLayer,
                     'visibility'
@@ -406,16 +350,19 @@ async function mapData(){
                     map.setLayoutProperty(clickedLayer, 'visibility', 'none');
                     this.className = '';
                     } else {
+                    
+                    console.log(SiteIds.indexOf(clickedLayer))
+                    idx = SiteIds.indexOf(clickedLayer)
 
-                    // let bbox = turf.extent(clickedLayer);
+                    let bbox = turf.extent(site_data[idx]);
+                    console.log(bbox)
 
-                    // // fit zom to the bounding box of whichever layers are loaded
-                    // function fit() {
-                    //     map.fitBounds(bbox, {padding: 140});
-                    //     };
+                    // fit zom to the bounding box of whichever layers are loaded
+                    function fit() {
+                        map.fitBounds(bbox, {maxZoom: 15});
+                        };
         
-                    //  Fit to bbox of activated layers
-                    // fit();
+                    fit();
                     this.className = 'active';
                     map.setLayoutProperty(
                     clickedLayer,
