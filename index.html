@@ -202,22 +202,35 @@ function average(elmt){
 var X_arr = [];
 var Y_arr = [];
 var download = false
-async function downloadWaypoint(data) {
-    X_arr.push(data[1]);
-    Y_arr.push(data[0]);
-    if (X_arr.length == 2){
-        X_avg = average(X_arr)
-        Y_avg = average(Y_arr)
-        var blob = new Blob([X_avg,',',Y_avg], {type: 'text/json'}),
-            e    = document.createEvent('MouseEvents'),
-            a    = document.createElement('a')
-        a.download = 'test.json'
-        a.href = window.URL.createObjectURL(blob)
-        a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-        a.dispatchEvent(e)
-    }
-}
+
+
+// async function downloadWaypoint(data) {
+    // X_arr.push(data[1]);
+    // Y_arr.push(data[0]);
+    // if (X_arr.length == 2){
+    //     X_avg = average(X_arr)
+    //     Y_avg = average(Y_arr)
+    //     var blob = new Blob([X_avg,',',Y_avg], {type: 'text/json'}),
+    //         e    = document.createEvent('MouseEvents'),
+    //         a    = document.createElement('a')
+    //     a.download = 'test.json'
+    //     a.href = window.URL.createObjectURL(blob)
+    //     a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+    //     e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+    //     a.dispatchEvent(e)
+    
+
+//     var blob = new Blob([data], {type: 'text/json'}),
+//         e    = document.createEvent('MouseEvents'),
+//         a    = document.createElement('a')
+//     a.download = 'test.json'
+//     a.href = window.URL.createObjectURL(blob)
+//     a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+//     e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+//         a.dispatchEvent(e)
+
+//     }
+// // }
 
 // This function allows us to read any geojson from a URL
 //      fetch() retreives data from a URL
@@ -367,24 +380,59 @@ async function mapData(){
 
     map.addControl(geolocate);
 
-    geolocate.on('geolocate', function(e) {
-        var lon = e.coords.longitude.toPrecision(8);
-        var lat = e.coords.latitude.toPrecision(7);
-        var position = [lat, lon];
 
-        data = JSON.stringify(position);
-        if (download) {
-            downloadWaypoint(position);
-            }
-        
-        document.getElementById('features').innerHTML =
-        // `e.point` is the x, y coordinates of the `mousemove` event
-        // relative to the top-left corner of the map.
-        // JSON.stringify(e.point) +
-        'Current Location:<br>' +
-        // `e.lngLat` is the longitude, latitude geographical position of the event.
-        data;
-    });
+//     async function waypoint(data) {
+//     X_arr.push(data[1]);
+//     Y_arr.push(data[0]);
+//     if (X_arr.length == 2){
+//         X_avg = average(X_arr)
+//         Y_avg = average(Y_arr)
+//         const timestamp = Date.now();
+//         var blob = new Blob([timestamp,',',X_avg,',',Y_avg], {type: 'text/json'}),
+//             e    = document.createEvent('MouseEvents'),
+//             a    = document.createElement('a')
+//         a.download = 'test.json'
+//         a.href = window.URL.createObjectURL(blob)
+//         a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+//         e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+//         a.dispatchEvent(e)
+//     }
+//     var X_arr = [];
+//     var Y_arr = [];
+// }
+
+
+
+    var lon = [];
+    var lat = [];
+    // var timestamp = [];
+    geolocate.on('geolocate', function(e) {
+
+        x = e.coords.longitude.toPrecision(8)
+        y = e.coords.latitude.toPrecision(7)
+        lon.push(x);
+        lat.push(y);
+        var timestamp = Date.now();
+
+        // if (lon.length == 2){
+        lon_avg = average(lon);
+        lat_avg = average(lat);
+        var record = JSON.stringify({'timestamp':timestamp,
+                                'X_avg':lon_avg,
+                                'Y_avg':lat_avg});
+
+        var blob = new Blob([record], {type: 'text/json'}),
+            e    = document.createEvent('MouseEvents'),
+            a    = document.createElement('a')
+        a.download = 'test.json'
+        a.href = window.URL.createObjectURL(blob)
+        a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+        a.dispatchEvent(e)
+       
+        document.getElementById('features').innerHTML =blob;
+            // }
+        });
 
     map.addControl(new mapboxgl.NavigationControl());  
 
