@@ -138,7 +138,7 @@
 <pre id="json"></pre>
 <script>
 // Replace access token!
-mapboxgl.accessToken = 'pk.eyJ1IjoianVuZXNwYWNlYm9vdHMiLCJhIjoiY2twY3g4aXloMWFlcDJzbXN3aG95aG5uZiJ9.mFiJt0MIfL1MiJ2rB2xhKQ';
+mapboxgl.accessToken = 'pk.eyJ1IjoidWJjbWljcm9tZXQiLCJhIjoiY2xmMnJzYzlnMGFsYTNxcW1kYWhubjBiaSJ9.rhIOVatxQoS4M__qIFv6Pg';
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/Surveying/data/';
 
@@ -163,9 +163,10 @@ function average(elmt){
 var lon = [];
 var lat = [];
 var time = [];
-var record = {};
+var record_to_download = {};
 function waypoint(coords) {
     var id = 0;
+    var record = {};
     var point_coords = {"type":"Point","coordinates":[]};
     var point_object = {"type":"Feature","id":[],"geometry":[],"properties":{"time":[]}};
     lon.push(coords.longitude.toPrecision(8));
@@ -175,6 +176,7 @@ function waypoint(coords) {
     point_object['id']=id
     point_object['geometry']=point_coords
     point_object['properties']['time']=average(time)
+    point_object['properties']['sample_size']=time.length
     record = JSON.stringify(point_object);
     return record;
 };
@@ -187,13 +189,6 @@ var geolocate = new mapboxgl.GeolocateControl({
     trackUserLocation: true,
     showUserHeading: true},);
 
-// var timestamp = [];
-geolocate.on('geolocate', function(e) {
-        if (download == true) {
-            record = waypoint(e.coords);
-        }}
-);
-
 // get geojson layer from github
 async function getGeoJson(layer) {
         const data = await fetch(layer);
@@ -203,15 +198,22 @@ async function getGeoJson(layer) {
 
 // Don't download by default on geolocate
 var download = false;
+var location_on = false;
+geolocate.on('geolocate', function(e) {
+        record_to_download = waypoint(e.coords);
+        location_on = true;
+    }
+);
+
 // Only download when prompted
 document.getElementById('waypoint').addEventListener('click', () => {
     download= true;
-    console.log(geolocate.trigger());
-    if (geolocate.trigger() == false){
+    // geolocate.trigger();
+    if (location_on == false){
         geolocate.trigger()};
     setTimeout(function() {
         // console.log(record)
-        var blob = new Blob([record], {type: 'text/json'}),
+        var blob = new Blob([record_to_download], {type: 'text/json'}),
             e    = document.createEvent('MouseEvents'),
             a    = document.createElement('a')
         a.download = 'test.json'
@@ -220,8 +222,8 @@ document.getElementById('waypoint').addEventListener('click', () => {
         e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
         a.dispatchEvent(e)
         download = false;
+        geolocate.trigger();
         }, 2000);
-    download = false;
 });
 
 //  Custom mapStyle lest us use ESRI raster tiles
