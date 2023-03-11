@@ -33,7 +33,6 @@
         background-color: #4ea0da;
     }
     
-    /* Control the Github Link button */
     .btn-waypt {
         font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         background-color: #3386c0;
@@ -52,7 +51,7 @@
         background-color: #4ea0da;
     }
 
-    .btn-track {
+    .btn-dwld {
         font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         background-color: #3386c0;
         color: #fff;
@@ -66,7 +65,7 @@
         padding: 10px;
         border-radius: 3px;
     }
-    .btn-track:hover {
+    .btn-dwld:hover {
         background-color: #4ea0da;
     }
 
@@ -135,6 +134,7 @@
 <div id="map"></div>
 <button id="homepage" class="btn-home">Source<br>Code</button>
 <button id="waypoint" class="btn-waypt">Log Waypoint</button>
+<button id="download" class="btn-dwld">Download</button>
 <pre id="json"></pre>
 <script>
 // Replace access token!
@@ -142,90 +142,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoidWJjbWljcm9tZXQiLCJhIjoiY2xmMnJzYzlnMGFsYTNxc
 
 const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/Surveying/data/';
 
-// Define Sites
-const SiteIds = ['BB1','BB2','DSM','RBM'];
-var Sites = [];
-for( var i = 0; i < SiteIds.length; i++ ){
-        Sites.push(SiteIds[i]+'.geojson');
-    }
-
-// Calculate an average
-function average(elmt){
-    var sum = 0;
-    for( var i = 0; i < elmt.length; i++ ){
-        sum += parseFloat( elmt[i]);
-    }
-    var avg = sum/elmt.length
-    return avg;
-    ;
-}
     
-var lon = [];
-var lat = [];
-var time = [];
-var record_to_download = {};
-function waypoint(coords) {
-    var id = 0;
-    var record = {};
-    var point_coords = {"type":"Point","coordinates":[]};
-    var point_object = {"type":"Feature","id":[],"geometry":[],"properties":{"time":[]}};
-    lon.push(coords.longitude.toPrecision(8));
-    lat.push(coords.latitude.toPrecision(7));
-    time.push(Date.now());
-    point_coords['coordinates']=[average(lon),average(lat)];
-    point_object['id']=id
-    point_object['geometry']=point_coords
-    point_object['properties']['time']=average(time)
-    point_object['properties']['sample_size']=time.length
-    record = JSON.stringify(point_object);
-    return record;
-};
-
-//  Locate the user
-var geolocate = new mapboxgl.GeolocateControl({
-    positionOptions: {
-    enableHighAccuracy: true
-    },
-    trackUserLocation: true,
-    showUserHeading: true},);
-
-// get geojson layer from github
-async function getGeoJson(layer) {
-        const data = await fetch(layer);
-        const geojson = await data.json();
-        return geojson;
-    };
-
-// Don't download by default on geolocate
-var download = false;
-var location_on = false;
-geolocate.on('geolocate', function(e) {
-        record_to_download = waypoint(e.coords);
-        location_on = true;
-    }
-);
-
-// Only download when prompted
-document.getElementById('waypoint').addEventListener('click', () => {
-    download= true;
-    // geolocate.trigger();
-    if (location_on == false){
-        geolocate.trigger()};
-    setTimeout(function() {
-        // console.log(record)
-        var blob = new Blob([record_to_download], {type: 'text/json'}),
-            e    = document.createEvent('MouseEvents'),
-            a    = document.createElement('a')
-        a.download = 'test.json'
-        a.href = window.URL.createObjectURL(blob)
-        a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-        a.dispatchEvent(e)
-        download = false;
-        geolocate.trigger();
-        }, 2000);
-});
-
 //  Custom mapStyle lest us use ESRI raster tiles
 const mapStyle = {
     version: 8,
@@ -254,8 +171,133 @@ const map = new mapboxgl.Map({
             style: mapStyle,
             });
 
+//  Locate the user
+var geolocate = new mapboxgl.GeolocateControl({
+    positionOptions: {
+    enableHighAccuracy: true
+    },
+    trackUserLocation: true,
+    showUserHeading: true},);
+
 map.addControl(geolocate);
 map.addControl(new mapboxgl.NavigationControl());  
+
+// Define Sites
+const SiteIds = ['BB1','BB2','DSM','RBM'];
+var Sites = [];
+for( var i = 0; i < SiteIds.length; i++ ){
+        Sites.push(SiteIds[i]+'.geojson');
+    }
+
+// Calculate an average
+function average(elmt){
+    var sum = 0;
+    for( var i = 0; i < elmt.length; i++ ){
+        sum += parseFloat( elmt[i]);
+    }
+    var avg = sum/elmt.length
+    return avg;
+    ;
+}
+    
+var lon = [];
+var lat = [];
+var time = [];
+var records_to_download = [];
+// Don't log/download by default on geolocate
+var log = false;
+var save = false;
+var location_on = false;
+var reset_location = false;
+
+function downloadData(){
+    var geojson_template = {"type":"FeatureCollection","features":records_to_download};
+    data = JSON.stringify(geojson_template);
+    var blob = new Blob([data], {type: 'text/json'}),
+            e    = document.createEvent('MouseEvents'),
+            a    = document.createElement('a')
+        a.download = Date.now()+'.geojson'
+        a.href = window.URL.createObjectURL(blob)
+        a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+        a.dispatchEvent(e)
+        records_to_download = [];
+    }
+const waypoint_marker = new mapboxgl.Marker()
+
+function waypoint() {
+    var id = 0;
+    var record = {};
+    var point_coords = {"type":"Point","coordinates":[]};
+    var point_object = {"type":"Feature","id":[],"geometry":[],"properties":{"time":[]}};
+    point_coords['coordinates']=[average(lon),average(lat)];
+    point_object['id']=id
+    point_object['geometry']=point_coords
+    point_object['properties']['time']=average(time)
+    point_object['properties']['sample_size']=time.length
+    // record = JSON.stringify(point_object);
+    waypoint_marker.setLngLat([average(lon),average(lat)]).addTo(map);
+    
+    return point_object;
+};
+
+geolocate.on('geolocate', function(e) {
+    location_on = true;
+    if (log == true){
+        lon.push(e.coords.longitude.toPrecision(8));
+        lat.push(e.coords.latitude.toPrecision(7));
+        time.push(Date.now());
+        if (time.length > 0){
+            record = waypoint();
+            };
+        };
+    if (save == true) {
+        records_to_download.push(record);
+        console.log(records_to_download);
+        const save_pt = new mapboxgl.Marker({ color: 'red'})
+                .setLngLat([average(lon),average(lat)])
+                .addTo(map);
+        lon = [];
+        lat = [];
+        time = [];
+        save = false
+    };
+        
+    }
+);
+geolocate.on('trackuserlocationend', () => {
+    location_on = false;
+});
+
+// Only download when prompted
+document.getElementById('waypoint').addEventListener('click', () => {
+    if (location_on == false){
+        geolocate.trigger()
+        location_on = true}
+    var elem = document.getElementById("waypoint");
+
+    if (elem.innerHTML=="Log Waypoint") {
+        log = true
+        elem.innerHTML  = "Save Waypoint"}
+    else {
+        log = false
+        save = true
+        elem.innerHTML  = "Log Waypoint"
+    };
+});
+
+// Only download when prompted
+document.getElementById('download').addEventListener('click', () => {
+    downloadData();
+});
+// get geojson layer from github
+
+// get geojson layer from github
+async function getGeoJson(layer) {
+        const data = await fetch(layer);
+        const geojson = await data.json();
+        return geojson;
+    };
 
 async function mapData(){
 
