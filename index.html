@@ -13,62 +13,42 @@
 	body { margin: 0; padding: 0;}
 	#map { position: absolute; top: 0; bottom: 0; width: 100%;}
 	#map canvas {cursor: crosshair;}
+  
+    .action_menu {
+        text-align: center;
+        background: #fff;
+        position: absolute;
+        z-index: 1;
+        bottom: 10%;
+        right: 10px;
+        border: #3887be;
+        border-radius: 3px;
+        display: flex;
+        max-height: 10%;
+        min-width: 75px;
+        max-width: 100%;
+        border: 1px solid rgba(0, 0, 0, 0.4);
+        font-family: 'Open Sans', sans-serif; 
+        }
 
     /* Control the Github Link button */
-    .btn-home {
+    .btn {
         font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         background-color: #3386c0;
         color: #fff;
-        position: absolute;
-        bottom: 20px;
-        left: 0%;
+        position: relative;
         z-index: 1;
-        border: none;
+        border-width: 1px;
         display: block;
         cursor: pointer;
-        padding: 10px;
-        border-radius: 3px;
+        padding: 8px;
+        border-color: black;
+        min-width: 5%;
     }
-    .btn-home:hover {
+    .btn:hover {
         background-color: #4ea0da;
     }
     
-    .btn-waypt {
-        font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-        background-color: #3386c0;
-        color: #fff;
-        position: absolute;
-        bottom: 2%;
-        right: 0%;
-        z-index: 1;
-        border: none;
-        display: block;
-        cursor: pointer;
-        padding: 10px;
-        border-radius: 3px;
-    }
-    .btn-waypt:hover {
-        background-color: #4ea0da;
-    }
-
-    .btn-dwld {
-        font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-        background-color: #3386c0;
-        color: #fff;
-        position: absolute;
-        bottom: 10%;
-        right: 0%;
-        z-index: 1;
-        border: none;
-        display: block;
-        cursor: pointer;
-        padding: 10px;
-        border-radius: 3px;
-    }
-    .btn-dwld:hover {
-        background-color: #4ea0da;
-    }
-
     .mapboxgl-popup {
         max-width: 1200px;
         min-width: 500px;
@@ -85,56 +65,62 @@
         word-break: break-all
       }
 
-    #menu {
+    #layer_menu {
         background: #fff;
         position: absolute;
         z-index: 1;
         top: 10px;
         left: 10px;
         border-radius: 3px;
-        width: 120px;
+        width: 5%;
+        min-width: 75px;
         border: 1px solid rgba(0, 0, 0, 0.4);
         font-family: 'Open Sans', sans-serif;
         }
-        
-    #menu a {
+              
+    nav a {
         font-size: 13px;
         color: #404040;
         display: block;
         margin: 0;
         padding: 0;
-        padding: 10px;
+        padding: 8px;
         text-decoration: none;
         border-bottom: 1px solid rgba(0, 0, 0, 0.25);
         text-align: center;
         }
         
-    #menu a:last-child {
+    nav a:last-child {
         border: none;
         }
         
-    #menu a:hover {
+    nav a:hover {
         background-color: #f8f8f8;
         color: #404040;
         }
         
-    #menu a.active {
+    nav a.active {
         background-color: #3887be;
         color: #ffffff;
         }
         
-    #menu a.active:hover {
+    nav a.active:hover {
         background: #3074a4;
         }
 </style>
 </head>
 
 <body>
-<nav id="menu"></nav>
+<nav id="layer_menu"></nav>
 <div id="map"></div>
-<button id="homepage" class="btn-home">Source<br>Code</button>
-<button id="waypoint" class="btn-waypt">Log Waypoint</button>
-<button id="download" class="btn-dwld">Download</button>
+<div class="action_menu"> 
+    <button id="homepage" class="btn">Restart</button>
+    <button id="waypoint" class="btn">Log Waypoint</button>
+    <button id="download" class="btn">Download</button>
+</div>
+
+
+
 <pre id="json"></pre>
 <script>
 // Replace access token!
@@ -352,7 +338,8 @@ async function mapData(){
         
         // Call fit when clicking the zoomto button
         document.getElementById('homepage').addEventListener('click', () => {
-            window.open('https://github.com/ubc-micromet/FieldSiteMaps');
+            // window.open('https://github.com/ubc-micromet/FieldSiteMaps');
+            location.reload();
         });
     });
 
@@ -389,52 +376,55 @@ async function mapData(){
             if (document.getElementById(id)) {
             continue;
             }
-            // Create a link.
-            const link = document.createElement('a');
-            link.id = id;
-            link.href = '#';
-            link.textContent = id;
-        
-            // Show or hide layer when the toggle is clicked.
-            link.onclick = function (e) {
-                const clickedLayer = this.textContent;
-                e.preventDefault();
-                e.stopPropagation();    
-                const visibility = map.getLayoutProperty(
-                    clickedLayer,
-                    'visibility'
-                    );
+                 // Create a link.
+                const link = document.createElement('a');
+                link.id = id;
+                link.href = '#';
+                link.textContent = id;
+                // Show or hide layer when the toggle is clicked.
+                link.onclick = function (e) {
+                    const clickedLayer = this.textContent;
+                    e.preventDefault();
+                    e.stopPropagation();    
+                    const visibility = map.getLayoutProperty(
+                        clickedLayer,
+                        'visibility'
+                        );
+                
+                    // Toggle layer visibility by changing the layout object's visibility property.
+                    if (visibility === 'visible') {
+                        map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                        map.setLayoutProperty(clickedLayer+'Trail', 'visibility', 'none');
+                        this.className = '';
+                        } 
+                        else {
+                        
+                        console.log(SiteIds.indexOf(clickedLayer))
+                        idx = SiteIds.indexOf(clickedLayer)
+
+                        let bbox = turf.extent(site_data[idx]);
+                        console.log(bbox)
+
+                        // fit zom to the bounding box of whichever layers are loaded
+                        function fit() {
+                            map.fitBounds(bbox, {maxZoom: 15});
+                            };
             
-                // Toggle layer visibility by changing the layout object's visibility property.
-                if (visibility === 'visible') {
-                    map.setLayoutProperty(clickedLayer, 'visibility', 'none');
-                    map.setLayoutProperty(clickedLayer+'Trail', 'visibility', 'none');
-                    this.className = '';
-                    } else {
-                    
-                    console.log(SiteIds.indexOf(clickedLayer))
-                    idx = SiteIds.indexOf(clickedLayer)
-
-                    let bbox = turf.extent(site_data[idx]);
-                    console.log(bbox)
-
-                    // fit zom to the bounding box of whichever layers are loaded
-                    function fit() {
-                        map.fitBounds(bbox, {maxZoom: 15});
-                        };
+                        fit();
+                        this.className = 'active';
+                        map.setLayoutProperty(clickedLayer,'visibility','visible');
+                        map.setLayoutProperty(clickedLayer+'Trail','visibility','visible');
+                        }
+                };
         
-                    fit();
-                    this.className = 'active';
-                    map.setLayoutProperty(clickedLayer,'visibility','visible');
-                    map.setLayoutProperty(clickedLayer+'Trail','visibility','visible');
-                    }
+            const layers = document.getElementById('layer_menu');
+            layers.appendChild(link);
             };
-        
-        const layers = document.getElementById('menu');
-        layers.appendChild(link);
-        };
+            
 
-    });
+            
+            
+        });
 
 };
 
