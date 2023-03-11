@@ -323,12 +323,28 @@ async function mapData(){
                 'layout': {
                     'visibility': 'none'
                 },
+                'filter': ['==', '$type', 'Point'],
                 'paint': {
                     'circle-radius': 6,
                     'circle-color': '#fc79fa',
                     "circle-stroke-width": 1,
                     "circle-stroke-color": 'black'
                     },
+                });
+            map.addLayer({
+                'id': SiteIds[i]+'Trail',
+                'type': 'line',
+                'source': SiteIds[i],
+                'layout': {
+                    'visibility': 'none',
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'filter': ['==', '$type', 'LineString'],
+                'paint': {
+                'line-color': '#0398fc',
+                'line-width': 5
+                }
                 });
         };
 
@@ -392,6 +408,7 @@ async function mapData(){
                 // Toggle layer visibility by changing the layout object's visibility property.
                 if (visibility === 'visible') {
                     map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                    map.setLayoutProperty(clickedLayer+'Trail', 'visibility', 'none');
                     this.className = '';
                     } else {
                     
@@ -408,11 +425,8 @@ async function mapData(){
         
                     fit();
                     this.className = 'active';
-                    map.setLayoutProperty(
-                    clickedLayer,
-                    'visibility',
-                    'visible'
-                    );
+                    map.setLayoutProperty(clickedLayer,'visibility','visible');
+                    map.setLayoutProperty(clickedLayer+'Trail','visibility','visible');
                     }
             };
         
