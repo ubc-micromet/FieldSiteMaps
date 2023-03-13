@@ -192,6 +192,9 @@ function average(elmt){
     
 var lon = [];
 var lat = [];
+var altitude = [];
+var accuracy = [];
+var altitudeAccuracy = [];
 var user_Coords = [];
 var time = [];
 var records_to_download = [];
@@ -204,6 +207,9 @@ var location_on = false;
 function Clear(){
     lon = [];
     lat = [];
+    altitude = [];
+    accuracy = [];
+    altitudeAccuracy = [];
     user_Coords = [];
     time = [];
 };
@@ -232,13 +238,23 @@ function setAccuracy() {
     };
 };
 
+function setDownloadName() {
+  let set = prompt("Specify Name, e.g.,", "SiteCoordinates")
+    if (set != null) {
+    return set
+    }
+    else{
+    return "SiteCoordinates"
+    };
+};
+
 function downloadData(){
     var geojson_template = {"type":"FeatureCollection","features":records_to_download};
     data = JSON.stringify(geojson_template);
     var blob = new Blob([data], {type: 'text/json'}),
             e    = document.createEvent('MouseEvents'),
             a    = document.createElement('a')
-        a.download = Date.now()+'.geojson'
+        a.download = setDownloadName()+'.geojson'
         a.href = window.URL.createObjectURL(blob)
         a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
         e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
@@ -256,6 +272,9 @@ function track() {
     line_object['geometry']=line_coords;
     line_coords['coordinates']=user_Coords;
     line_object['properties']['time']=time;
+    line_object['properties']['altitude']=altitude;
+    line_object['properties']['accuracy']=accuracy;
+    line_object['properties']['altitudeAccuracy']=altitudeAccuracy;
     line_object['properties']['sample_size']=time.length;
     // waypoint_marker.setLngLat([average(lon),average(lat)]).addTo(map);
     return line_object;
@@ -269,30 +288,51 @@ function waypoint() {
     // point_object['id']=id;
     point_object['geometry']=point_coords;
     if (waypoint_Accuracy == 1){
-    point_coords['coordinates']=user_Coords[user_Coords.length-1]
-    point_object['properties']['time']=time[time.length-1];}
+        point_coords['coordinates']=user_Coords[user_Coords.length-1];
+        point_object['properties']['time']=time[time.length-1];
+        point_object['properties']['altitude']=altitude[altitude.length-1];
+        point_object['properties']['accuracy']=accuracy[accuracy.length-1];
+        point_object['properties']['altitudeAccuracy']=altitudeAccuracy[altitudeAccuracy.length-1];
+    }
     else{
         point_coords['coordinates']=user_Coords[average(lon),average(lat)]
         point_object['properties']['time']=time[time.length-1]
+        point_coords['properties']['altitude']=average(altitude);
+        point_coords['properties']['accuracy']=average(accuracy);
+        point_coords['properties']['altitudeAccuracy']=average(altitudeAccuracy);
 
     }
     point_object['properties']['sample_size']=waypoint_Accuracy;
-    console.log(user_Coords)
     waypoint_marker.setLngLat(user_Coords[user_Coords.length-1]).addTo(map);
     return point_object;
 };
 
 geolocate.on('geolocate', function(e) {
-    location_on = true;
-    if (log == true){
+
+    requestAnimationFrame(
+    function(){
+                document.body.style.background = 'black';
+            }
+        );
+    function logCoordsData(){
         lon.push(e.coords.longitude.toPrecision(8));
         lat.push(e.coords.latitude.toPrecision(7));
+        altitude.push(e.coords.altitude.toPrecision(4));
+        accuracy.push(e.coords.accuracy.toPrecision(4));
+        altitudeAccuracy.push(e.coords.altitudeAccuracy.toPrecision(4));
         time.push(Date.now());
         user_Coords.push([lon[time.length-1],lat[time.length-1]]);
+    };
+
+    location_on = true;
+    if (log == true){
+        logCoordsData()
+        newMark = new mapboxgl.Marker({ color: 'blue'})
+                .setLngLat(user_Coords[user_Coords.length-1])
+                .addTo(map);
         if (save == true){
             record = track();
             records_to_download.push(record);
-            console.log(records_to_download)
             newMark = new mapboxgl.Marker({ color: 'red'})
                     .setLngLat(user_Coords[user_Coords.length-1])
                     .addTo(map);
@@ -303,14 +343,10 @@ geolocate.on('geolocate', function(e) {
     };
 
     if (save == true){
-        lon.push(e.coords.longitude.toPrecision(8));
-        lat.push(e.coords.latitude.toPrecision(7));
-        time.push(Date.now());
-        user_Coords.push([lon[time.length-1],lat[time.length-1]]);
+        logCoordsData()
         if (time.length >= waypoint_Accuracy){
             record = waypoint();
             records_to_download.push(record);
-            console.log()
             newMark = new mapboxgl.Marker({ color: 'red'})
                     .setLngLat(user_Coords[user_Coords.length-1])
                     .addTo(map);
@@ -356,7 +392,6 @@ document.getElementById('track').addEventListener('click', () => {
         elem.innerHTML  = "Start<br>Track"
     };
 });
-
 
 document.getElementById('waypoint').addEventListener('click', () => {
     log = false;
@@ -463,8 +498,6 @@ async function mapData(){
                         this.className = '';
                         } 
                         else {
-                        
-                        console.log(SiteIds.indexOf(clickedLayer))
                         idx = SiteIds.indexOf(clickedLayer)
 
                         let bbox = turf.extent(site_data[idx]);
