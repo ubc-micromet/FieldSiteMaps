@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>UBC Micromet Field Sites</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
+<!-- Import Turf Module - Needed to calculate bounding boxes -->
+<script src='https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js'></script>
+
+<style>
+	body { margin: 0; padding: 0;}
+	#map { position: absolute; top: 0; bottom: 0; width: 100%;}
+	#map canvas {cursor: crosshair;}
+  
+    .action_menu {
+        text-align: center;
+        background: #fff;
+        position: absolute;
+        z-index: 1;
+        bottom: 2%;
+        right: 10px;
+        border: #3887be;
+        border-radius: 3px;
+        display: flex;
+        max-height: 10%;
+        min-width: 75px;
+        max-width: 100%;
+        border: 1px solid rgba(0, 0, 0, 0.4);
+        font-family: 'Open Sans', sans-serif; 
+        }
+
+    /* Control the Github Link button */
+    .btn {
+        font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        background-color: #3386c0;
+        color: #fff;
+        position: relative;
+        z-index: 1;
+        border-width: 1px;
+        display: block;
+        cursor: pointer;
+        padding: 8px;
+        border-color: black;
+        min-width: 5%;
+    }
+    .btn:hover {
+        background-color: #4ea0da;
+    }
+    .btn:first-child{
+        margin-left: 0;
+    }    
+    
+    .mapboxgl-popup {
+        max-width: 1200px;
+        min-width: 500px;
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+    td {
+        border: solid 1px #666;
+        max-width:10%;
+        word-break: break-all
+      }
+
+    #layer_menu {
+        background: #fff;
+        position: absolute;
+        z-index: 1;
+        top: 10px;
+        left: 10px;
+        border-radius: 3px;
+        width: 5%;
+        min-width: 75px;
+        border: 1px solid rgba(0, 0, 0, 0.4);
+        font-family: 'Open Sans', sans-serif;
+        }
+              
+    nav a {
+        font-size: 13px;
+        color: #404040;
+        display: block;
+        margin: 0;
+        padding: 0;
+        padding: 8px;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+        text-align: center;
+        }
+        
+    nav a:last-child {
+        border: none;
+        }
+        
+    nav a:hover {
+        background-color: #f8f8f8;
+        color: #404040;
+        }
+        
+    nav a.active {
+        background-color: #3887be;
+        color: #ffffff;
+        }
+        
+    nav a.active:hover {
+        background: #3074a4;
+        }
+</style>
+</head>
+
+<body>
+<nav id="layer_menu"></nav>
+<div id="map"></div>
+<div class="action_menu"> 
+    <button id="homepage" class="btn">Settings</button>
+    <button id="waypoint" class="btn">Save<br>Waypoint</button>
+    <button id="track" class="btn">Start<br>Track</button>
+    <button id="download" class="btn">Download</button>
+</div>
+
+
+
+<pre id="json"></pre>
+<script>
+// Replace access token!
+mapboxgl.accessToken = 'pk.eyJ1IjoidWJjbWljcm9tZXQiLCJhIjoiY2xmMnJzYzlnMGFsYTNxcW1kYWhubjBiaSJ9.rhIOVatxQoS4M__qIFv6Pg';
+
+const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/Surveying/data/';
+
+    
+//  Custom mapStyle lest us use ESRI raster tiles
+const mapStyle = {
+    version: 8,
+    sources: {
+    worldImagery: {
+        type: "raster",
+        tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+        tileSize: 256
+        }
+    },
+    layers: [{
+        id: "worldImagery",
+        type: "raster",
+        source: "worldImagery",
+        minzoom: 0,
+        maxzoom: 22
+        }
+    ]
+};
+
+//  Create the map - zoom and center are "arbitrary"
+const map = new mapboxgl.Map({
+            container: 'map',
+            zoom: 11,
+            center: [-122.998, 49.135],
+            style: mapStyle,
+            });
+
+//  Locate the user
+var geolocate = new mapboxgl.GeolocateControl({
+    positionOptions: {
+    enableHighAccuracy: true
+    },
+    trackUserLocation: true,
+    showUserHeading: true},);
+
+map.addControl(geolocate);
+map.addControl(new mapboxgl.NavigationControl());  
+
+// Define Sites
+const SiteIds = ['BB1','BB2','DSM','RBM'];
+var Sites = [];
+for( var i = 0; i < SiteIds.length; i++ ){
+        Sites.push(SiteIds[i]+'.geojson');
+    }
+
+// Calculate an average
+function average(elmt){
+    var sum = 0;
+    for( var i = 0; i < elmt.length; i++ ){
+        sum += parseFloat( elmt[i]);
+    }
+    var avg = sum/elmt.length
+    return avg;
+    ;
+}
+    
+var lon = [];
+var lat = [];
+var altitude = [];
+var accuracy = [];
+var altitudeAccuracy = [];
+var user_Coords = [];
+var time = [];
+var records_to_download = [];
+var active_Markers = [];
+var waypoint_Accuracy = 1;
+var log = false;
+var save = false;
+var location_on = false;
+
+function Clear(){
+    lon = [];
+    lat = [];
+    altitude = [];
+    accuracy = [];
+    altitudeAccuracy = [];
+    user_Coords = [];
+    time = [];
+};
+
+function Reset(clear = false){
+    if (clear == true){
+        Clear();
+    };
+    records_to_download = [];
+    active_Markers = [];
+    waypoint_Accuracy = 1;
+    log = false;
+    save = false;
+};
+
+
+function setAccuracy() {
+  let set = prompt("Set Waypoint Accuracy Function", 1)
+    if (set != null) {
+    waypoint_Accuracy = parseInt(set, 10);
+    if (isNaN(waypoint_Accuracy)) { waypoint_Accuracy = 1; }
+    else if (waypoint_Accuracy<1) { waypoint_Accuracy = 1; };
+    }
+    else{
+    waypoint_Accuracy =1; 
+    };
+};
+
+function setDownloadName() {
+  let set = prompt("Specify Name, e.g.,", "SiteCoordinates")
+    if (set != null) {
+    return set
+    }
+    else{
+    return "SiteCoordinates"
+    };
+};
+
+function downloadData(){
+    var geojson_template = {"type":"FeatureCollection","features":records_to_download};
+    data = JSON.stringify(geojson_template);
+    var blob = new Blob([data], {type: 'text/json'}),
+            e    = document.createEvent('MouseEvents'),
+            a    = document.createElement('a')
+        a.download = setDownloadName()+'.geojson'
+        a.href = window.URL.createObjectURL(blob)
+        a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+        a.dispatchEvent(e)
+        records_to_download = [];
+        active_Markers = [];
+    }
+const waypoint_marker = new mapboxgl.Marker()
+
+function track() {
+    // var id = 0;
+    var line_coords = {"type":"LineString","coordinates":[]};
+    var line_object = {"type":"Feature","geometry":[],"properties":{}};
+    // line_object['id']=id;
+    line_object['geometry']=line_coords;
+    line_coords['coordinates']=user_Coords;
+    line_object['properties']['time']=time;
+    line_object['properties']['altitude']=altitude;
+    line_object['properties']['accuracy']=accuracy;
+    line_object['properties']['altitudeAccuracy']=altitudeAccuracy;
+    line_object['properties']['sample_size']=time.length;
+    // waypoint_marker.setLngLat([average(lon),average(lat)]).addTo(map);
+    return line_object;
+};
+
+
+function waypoint() {
+    // var id = 0;
+    var point_coords = {"type":"Point","coordinates":[]};
+    var point_object = {"type":"Feature","geometry":[],"properties":{"time":[]}};
+    // point_object['id']=id;
+    point_object['geometry']=point_coords;
+    if (waypoint_Accuracy == 1){
+        point_coords['coordinates']=user_Coords[user_Coords.length-1];
+        point_object['properties']['time']=time[time.length-1];
+        point_object['properties']['altitude']=altitude[altitude.length-1];
+        point_object['properties']['accuracy']=accuracy[accuracy.length-1];
+        point_object['properties']['altitudeAccuracy']=altitudeAccuracy[altitudeAccuracy.length-1];
+    }
+    else{
+        point_coords['coordinates']=user_Coords[average(lon),average(lat)]
+        point_object['properties']['time']=time[time.length-1]
+        point_coords['properties']['altitude']=average(altitude);
+        point_coords['properties']['accuracy']=average(accuracy);
+        point_coords['properties']['altitudeAccuracy']=average(altitudeAccuracy);
+
+    }
+    point_object['properties']['sample_size']=waypoint_Accuracy;
+    waypoint_marker.setLngLat(user_Coords[user_Coords.length-1]).addTo(map);
+    return point_object;
+};
+
+geolocate.on('geolocate', function(e) {
+
+    requestAnimationFrame(
+    function(){
+                document.body.style.background = 'black';
+            }
+        );
+    function logCoordsData(){
+        lon.push(e.coords.longitude.toPrecision(8));
+        lat.push(e.coords.latitude.toPrecision(7));
+        altitude.push(e.coords.altitude);
+        accuracy.push(e.coords.accuracy);
+        altitudeAccuracy.push(e.coords.altitudeAccuracy);
+        time.push(Date.now());
+        console.log(accuracy)
+        user_Coords.push([lon[time.length-1],lat[time.length-1]]);
+    };
+
+    location_on = true;
+    if (log == true){
+        logCoordsData()
+        newMark = new mapboxgl.Marker({ color: 'blue'})
+                .setLngLat(user_Coords[user_Coords.length-1])
+                .addTo(map);
+        if (save == true){
+            record = track();
+            records_to_download.push(record);
+            newMark = new mapboxgl.Marker({ color: 'red'})
+                    .setLngLat(user_Coords[user_Coords.length-1])
+                    .addTo(map);
+            active_Markers.push(newMark);
+            save = false;
+            log = false;
+            Clear();
+        }
+    };
+
+    if (save == true){
+        logCoordsData()
+        if (time.length >= waypoint_Accuracy){
+            record = waypoint();
+            records_to_download.push(record);
+            newMark = new mapboxgl.Marker({ color: 'red'})
+                    .setLngLat(user_Coords[user_Coords.length-1])
+                    .addTo(map);
+            active_Markers.push(newMark);
+            save = false;
+            Clear();
+            };
+    };
+        
+    }
+);
+geolocate.on('trackuserlocationend', () => {
+    location_on = false;
+});
+
+// function reset ()
+
+// Call fit when clicking the zoomto button
+document.getElementById('homepage').addEventListener('click', () => {
+    var elem = document.getElementById("homepage");
+
+    if (elem.innerHTML=="Reset") {
+        Reset();
+        elem.innerHTML  = "Settings"}
+    else {
+        setAccuracy();
+        elem.innerHTML  = "Reset"
+    };
+});
+
+// Only download when prompted
+document.getElementById('track').addEventListener('click', () => {
+    if (location_on == false){
+        geolocate.trigger()
+        location_on = true}
+    var elem = document.getElementById("track");
+
+    if (elem.innerHTML=="Start<br>Track") {
+        log = true
+        elem.innerHTML  = "Save<br>Track"}
+    else {
+        save = true;
+        elem.innerHTML  = "Start<br>Track"
+    };
+});
+
+document.getElementById('waypoint').addEventListener('click', () => {
+    log = false;
+    if (location_on == false){
+        geolocate.trigger()
+        location_on = true}
+    var elem = document.getElementById("waypoint");
+    save = true;
+});
+
+// Only download when prompted
+document.getElementById('download').addEventListener('click', () => {
+    downloadData();
+});
+// get geojson layer from github
+
+// get geojson layer from github
+async function getGeoJson(layer) {
+        const data = await fetch(layer);
+        const geojson = await data.json();
+        return geojson;
+    };
+
+async function mapData(){
+
+    const site_data = []
+        
+    // const site_name = 'name'
+    //  On load - add geojson
+    map.on('load', async function() {
+
+        // Add each layer as an invisible layer
+        for (var i = 0; i < SiteIds.length; i++) {
+            var layer = await getGeoJson(URL+Sites[i]);
+            site_data.push(layer);
+         
+            map.addSource(SiteIds[i], {
+            type: 'geojson',
+            data: site_data[i]
+            });
+              
+            map.addLayer({'id': SiteIds[i],
+                'type': 'circle',
+                'source': SiteIds[i],
+                'layout': {
+                    'visibility': 'none'
+                },
+                'filter': ['==', '$type', 'Point'],
+                'paint': {
+                    'circle-radius': 6,
+                    'circle-color': '#fc79fa',
+                    "circle-stroke-width": 1,
+                    "circle-stroke-color": 'black'
+                    },
+                });
+            map.addLayer({'id': SiteIds[i]+'Trail',
+                'type': 'line',
+                'source': SiteIds[i],
+                'layout': {
+                    'visibility': 'none',
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'filter': ['==', '$type', 'LineString'],
+                'paint': {
+                'line-color': '#0398fc',
+                'line-width': 5
+                }
+                });
+                
+            };
+
+        // geolocate.trigger();
+        
+    });
+
+    
+    map.on('idle', () => {
+        // Set up the corresponding toggle button for each layer.
+        for (const id of SiteIds) {
+        // Skip layers that already have a button set up.
+            if (document.getElementById(id)) {
+            continue;
+            }
+                // Create a link.
+                const link = document.createElement('a');
+                link.id = id;
+                link.href = '#';
+                link.textContent = id;
+                // Show or hide layer when the toggle is clicked.
+                link.onclick = function (e) {
+                    const clickedLayer = this.textContent;
+                    e.preventDefault();
+                    e.stopPropagation();    
+                    const visibility = map.getLayoutProperty(
+                        clickedLayer,
+                        'visibility'
+                        );
+                
+                    // Toggle layer visibility by changing the layout object's visibility property.
+                    if (visibility === 'visible') {
+                        map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                        map.setLayoutProperty(clickedLayer+'Trail', 'visibility', 'none');
+                        this.className = '';
+                        } 
+                        else {
+                        idx = SiteIds.indexOf(clickedLayer)
+
+                        let bbox = turf.extent(site_data[idx]);
+
+                        // fit zom to the bounding box of whichever layers are loaded
+                        function fit() {
+                            map.fitBounds(bbox, {maxZoom: 15});
+                            };
+            
+                        fit();
+                        this.className = 'active';
+                        map.setLayoutProperty(clickedLayer,'visibility','visible');
+                        map.setLayoutProperty(clickedLayer+'Trail','visibility','visible');
+                        }
+                };
+
+            const layers = document.getElementById('layer_menu');
+            layers.appendChild(link);
+            };    
+
+    // map.on('click', 'Flux Towers', (e) => {
+    //     // Copy coordinates array.
+    //     const coordinates = e.features[0].geometry.coordinates.slice();
+    //     const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
+    //     '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
+    //     '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision(7)+'</td></tr>'+
+    //     '<tr><td><b>First Year</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
+    //     '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
+    //     '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
+    //     '</table>';
+        
+    //     // Ensure that if the map is zoomed out such that multiple
+    //     // copies of the feature are visible, the popup appears
+    //     // over the copy being pointed to.
+    //     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    //     }
+        
+    //     new mapboxgl.Popup()
+    //     .setLngLat(coordinates)
+    //     .setHTML(description)
+    //     .addTo(map);
+    //     });
+
+            
+
+            
+            
+        });
+
+};
+
+// Call mapData() to initalize the map
+mapData();
+
+</script>
+ 
+</body>
+</html>
