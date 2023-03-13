@@ -117,7 +117,7 @@
 <nav id="layer_menu"></nav>
 <div id="map"></div>
 <div class="action_menu"> 
-    <button id="homepage" class="btn">settings</button>
+    <button id="homepage" class="btn">Settings</button>
     <button id="waypoint" class="btn">Save<br>Waypoint</button>
     <button id="track" class="btn">Start<br>Track</button>
     <button id="download" class="btn">Download</button>
@@ -317,10 +317,11 @@ geolocate.on('geolocate', function(e) {
     function logCoordsData(){
         lon.push(e.coords.longitude.toPrecision(8));
         lat.push(e.coords.latitude.toPrecision(7));
-        altitude.push(e.coords.altitude.toPrecision(4));
-        accuracy.push(e.coords.accuracy.toPrecision(4));
-        altitudeAccuracy.push(e.coords.altitudeAccuracy.toPrecision(4));
+        altitude.push(e.coords.altitude);
+        accuracy.push(e.coords.accuracy);
+        altitudeAccuracy.push(e.coords.altitudeAccuracy);
         time.push(Date.now());
+        console.log(accuracy)
         user_Coords.push([lon[time.length-1],lat[time.length-1]]);
     };
 
