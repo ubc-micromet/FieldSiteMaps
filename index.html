@@ -442,12 +442,12 @@ async function mapData(){
                 'type': 'circle',
                 'source': SiteIds[i],
                 'layout': {
-                    'visibility': 'none'
+                    'visibility': 'visible'
                 },
                 'filter': ['==', '$type', 'Point'],
                 'paint': {
-                    'circle-radius': 6,
-                    'circle-color': '#fc79fa',
+                    'circle-radius': 10,
+                    'circle-color': '#f5bf42',
                     "circle-stroke-width": 1,
                     "circle-stroke-color": 'black'
                     },
@@ -521,37 +521,37 @@ async function mapData(){
 
             const layers = document.getElementById('layer_menu');
             layers.appendChild(link);
-            };    
+            };
+        }  
+    );
 
-    // map.on('click', 'Flux Towers', (e) => {
-    //     // Copy coordinates array.
-    //     const coordinates = e.features[0].geometry.coordinates.slice();
-    //     const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
-    //     '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
-    //     '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision(7)+'</td></tr>'+
-    //     '<tr><td><b>First Year</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
-    //     '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
-    //     '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
-    //     '</table>';
+    map.on('click', SiteIds, (e) => {
+        // Copy coordinates array.
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
+        '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
+        '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
+        '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
+        '</table>';
         
-    //     // Ensure that if the map is zoomed out such that multiple
-    //     // copies of the feature are visible, the popup appears
-    //     // over the copy being pointed to.
-    //     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-    //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    //     }
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
         
-    //     new mapboxgl.Popup()
-    //     .setLngLat(coordinates)
-    //     .setHTML(description)
-    //     .addTo(map);
-    //     });
-
-            
-
-            
-            
+        new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(description)
+        .addTo(map);
         });
+
+            
+
+            
+            
+        // });
 
 };
 
