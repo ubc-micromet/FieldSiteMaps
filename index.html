@@ -130,7 +130,7 @@
 // Replace access token!
 mapboxgl.accessToken = 'pk.eyJ1IjoidWJjbWljcm9tZXQiLCJhIjoiY2xmMnJzYzlnMGFsYTNxcW1kYWhubjBiaSJ9.rhIOVatxQoS4M__qIFv6Pg';
 
-const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/Surveying/data/';
+const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/Surveying/layers/';
 
     
 //  Custom mapStyle lest us use ESRI raster tiles
@@ -276,7 +276,6 @@ function track() {
     line_object['properties']['accuracy']=accuracy;
     line_object['properties']['altitudeAccuracy']=altitudeAccuracy;
     line_object['properties']['sample_size']=time.length;
-    // waypoint_marker.setLngLat([average(lon),average(lat)]).addTo(map);
     return line_object;
 };
 
@@ -287,33 +286,37 @@ function waypoint() {
     var point_object = {"type":"Feature","geometry":[],"properties":{"time":[]}};
     // point_object['id']=id;
     point_object['geometry']=point_coords;
-    if (waypoint_Accuracy == 1){
-        point_coords['coordinates']=user_Coords[user_Coords.length-1];
-        point_object['properties']['time']=time[time.length-1];
-        point_object['properties']['altitude']=altitude[altitude.length-1];
-        point_object['properties']['accuracy']=accuracy[accuracy.length-1];
-        point_object['properties']['altitudeAccuracy']=altitudeAccuracy[altitudeAccuracy.length-1];
+    // if (waypoint_Accuracy == 1){
+    //     point_coords['coordinates']=user_Coords[user_Coords.length-1];
+    //     point_object['properties']['time']=time[time.length-1];
+    //     point_object['properties']['altitude']=altitude[altitude.length-1];
+    //     point_object['properties']['accuracy']=accuracy[accuracy.length-1];
+    //     point_object['properties']['altitudeAccuracy']=altitudeAccuracy[altitudeAccuracy.length-1];
+    // }
+    // else{
+    point_coords['coordinates']=user_Coords[average(lon),average(lat)]
+    point_object['properties']['time']=time[average(time)]
+    point_object['properties']['altitude']=average(altitude);
+    point_object['properties']['accuracy']=average(accuracy);
+    point_object['properties']['altitudeAccuracy']=average(altitudeAccuracy);
+    point_object['properties']['sample_size']=waypoint_Accuracy;
+    if (time.length > 1){
+        point_object['properties']['sample_duration_ms'] = time[time.length-1]-time[0]
     }
     else{
-        point_coords['coordinates']=user_Coords[average(lon),average(lat)]
-        point_object['properties']['time']=time[time.length-1]
-        point_coords['properties']['altitude']=average(altitude);
-        point_coords['properties']['accuracy']=average(accuracy);
-        point_coords['properties']['altitudeAccuracy']=average(altitudeAccuracy);
-
+        point_object['properties']['sample_duration_ms'] = 0
     }
-    point_object['properties']['sample_size']=waypoint_Accuracy;
     waypoint_marker.setLngLat(user_Coords[user_Coords.length-1]).addTo(map);
     return point_object;
 };
 
 geolocate.on('geolocate', function(e) {
 
-    requestAnimationFrame(
-    function(){
-                document.body.style.background = 'black';
-            }
-        );
+    // requestAnimationFrame(
+    // function(){
+    //             document.body.style.background = 'black';
+    //         }
+    //     );
     function logCoordsData(){
         lon.push(e.coords.longitude.toPrecision(8));
         lat.push(e.coords.latitude.toPrecision(7));
