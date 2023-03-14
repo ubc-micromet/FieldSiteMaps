@@ -31,7 +31,6 @@
         font-family: 'Open Sans', sans-serif; 
         }
 
-    /* Control the Github Link button */
     .btn {
         font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         background-color: #3386c0;
@@ -117,7 +116,8 @@
 <nav id="layer_menu"></nav>
 <div id="map"></div>
 <div class="action_menu"> 
-    <button id="homepage" class="btn">Settings</button>
+    <button id="readme" class="btn">Docs</button>
+    <button id="settings" class="btn">GPS<br>Settings</button>
     <button id="waypoint" class="btn">Save<br>Waypoint</button>
     <button id="track" class="btn">Start<br>Track</button>
     <button id="download" class="btn">Download</button>
@@ -225,9 +225,8 @@ function Reset(clear = false){
     save = false;
 };
 
-
 function setAccuracy() {
-  let set = prompt("Set Waypoint Accuracy Function", 1)
+  let set = prompt("Set waypoint averaging: The number of gps pings that go into one waypoint, a higher value will will take longer to process each request and give a more accurate result.", 1)
     if (set != null) {
     waypoint_Accuracy = parseInt(set, 10);
     if (isNaN(waypoint_Accuracy)) { waypoint_Accuracy = 1; }
@@ -265,10 +264,8 @@ function downloadData(){
 const waypoint_marker = new mapboxgl.Marker()
 
 function track() {
-    // var id = 0;
     var line_coords = {"type":"LineString","coordinates":[]};
     var line_object = {"type":"Feature","geometry":[],"properties":{}};
-    // line_object['id']=id;
     line_object['geometry']=line_coords;
     line_coords['coordinates']=user_Coords;
     line_object['properties']['time']=time;
@@ -279,21 +276,10 @@ function track() {
     return line_object;
 };
 
-
 function waypoint() {
-    // var id = 0;
     var point_coords = {"type":"Point","coordinates":[]};
     var point_object = {"type":"Feature","geometry":[],"properties":{"time":[]}};
-    // point_object['id']=id;
     point_object['geometry']=point_coords;
-    // if (waypoint_Accuracy == 1){
-    //     point_coords['coordinates']=user_Coords[user_Coords.length-1];
-    //     point_object['properties']['time']=time[time.length-1];
-    //     point_object['properties']['altitude']=altitude[altitude.length-1];
-    //     point_object['properties']['accuracy']=accuracy[accuracy.length-1];
-    //     point_object['properties']['altitudeAccuracy']=altitudeAccuracy[altitudeAccuracy.length-1];
-    // }
-    // else{
     point_coords['coordinates']=[average(lon),average(lat)]
     point_object['properties']['time']=time[average(time)]
     point_object['properties']['altitude']=average(altitude);
@@ -312,11 +298,6 @@ function waypoint() {
 
 geolocate.on('geolocate', function(e) {
 
-    // requestAnimationFrame(
-    // function(){
-    //             document.body.style.background = 'black';
-    //         }
-    //     );
     function logCoordsData(){
         lon.push(e.coords.longitude);
         lat.push(e.coords.latitude);
@@ -366,12 +347,8 @@ geolocate.on('trackuserlocationend', () => {
     location_on = false;
 });
 
-// function reset ()
-
-// Call fit when clicking the zoomto button
-document.getElementById('homepage').addEventListener('click', () => {
-    var elem = document.getElementById("homepage");
-
+document.getElementById('settings').addEventListener('click', () => {
+    var elem = document.getElementById("settings");
     if (elem.innerHTML=="Reset") {
         Reset();
         elem.innerHTML  = "Settings"}
@@ -410,7 +387,10 @@ document.getElementById('waypoint').addEventListener('click', () => {
 document.getElementById('download').addEventListener('click', () => {
     downloadData();
 });
-// get geojson layer from github
+
+document.getElementById('readme').addEventListener('click', () => {
+        window.open('https://github.com/ubc-micromet/FieldSiteMaps');
+    });
 
 // get geojson layer from github
 async function getGeoJson(layer) {
