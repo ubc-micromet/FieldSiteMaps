@@ -294,7 +294,7 @@ function waypoint() {
     //     point_object['properties']['altitudeAccuracy']=altitudeAccuracy[altitudeAccuracy.length-1];
     // }
     // else{
-    point_coords['coordinates']=user_Coords[average(lon),average(lat)]
+    point_coords['coordinates']=[average(lon),average(lat)]
     point_object['properties']['time']=time[average(time)]
     point_object['properties']['altitude']=average(altitude);
     point_object['properties']['accuracy']=average(accuracy);
@@ -318,13 +318,12 @@ geolocate.on('geolocate', function(e) {
     //         }
     //     );
     function logCoordsData(){
-        lon.push(e.coords.longitude.toPrecision(8));
-        lat.push(e.coords.latitude.toPrecision(7));
+        lon.push(e.coords.longitude);
+        lat.push(e.coords.latitude);
         altitude.push(e.coords.altitude);
         accuracy.push(e.coords.accuracy);
         altitudeAccuracy.push(e.coords.altitudeAccuracy);
         time.push(Date.now());
-        console.log(accuracy)
         user_Coords.push([lon[time.length-1],lat[time.length-1]]);
     };
 
