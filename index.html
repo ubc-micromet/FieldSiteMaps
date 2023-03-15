@@ -514,7 +514,7 @@ async function mapData(){
 
     map.on('click', SiteIds, (e) => {
         // Copy coordinates array.
-        const coordinates = [0,0]
+        var coordinates = [0,0]
         if (e.features[0].geometry.coordinates[0].constructor === Array){ 
             coordinates = e.features[0].geometry.coordinates[0].slice();
         }
