@@ -347,6 +347,8 @@ geolocate.on('trackuserlocationend', () => {
     location_on = false;
 });
 
+
+//  Action Buttons
 document.getElementById('settings').addEventListener('click', () => {
     var elem = document.getElementById("settings");
     if (elem.innerHTML=="Reset") {
@@ -358,7 +360,6 @@ document.getElementById('settings').addEventListener('click', () => {
     };
 });
 
-// Only download when prompted
 document.getElementById('track').addEventListener('click', () => {
     if (location_on == false){
         geolocate.trigger()
@@ -383,7 +384,6 @@ document.getElementById('waypoint').addEventListener('click', () => {
     save = true;
 });
 
-// Only download when prompted
 document.getElementById('download').addEventListener('click', () => {
     downloadData();
 });
@@ -406,6 +406,7 @@ async function mapData(){
     // const site_name = 'name'
     //  On load - add geojson
     map.on('load', async function() {
+        var set_vis = 'visible'
 
         // Add each layer as an invisible layer
         for (var i = 0; i < SiteIds.length; i++) {
@@ -416,12 +417,19 @@ async function mapData(){
             type: 'geojson',
             data: site_data[i]
             });
-              
+            
+            if (SiteIds[i] == 'BBS'){
+                set_vis = 'none'
+            }
+            else{
+                set_vis = 'visible'
+            };
+
             map.addLayer({'id': SiteIds[i],
                 'type': 'circle',
                 'source': SiteIds[i],
                 'layout': {
-                    'visibility': 'visible'
+                    'visibility': set_vis
                 },
                 'filter': ['==', '$type', 'Point'],
                 'paint': {
@@ -506,7 +514,14 @@ async function mapData(){
 
     map.on('click', SiteIds, (e) => {
         // Copy coordinates array.
-        const coordinates = e.features[0].geometry.coordinates.slice();
+        const coordinates = [0,0]
+        if (e.features[0].geometry.coordinates[0].constructor === Array){ 
+            coordinates = e.features[0].geometry.coordinates[0].slice();
+        }
+        else{
+            coordinates = e.features[0].geometry.coordinates.slice();
+        };
+        console.log(coordinates)
         const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
         '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
         '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
