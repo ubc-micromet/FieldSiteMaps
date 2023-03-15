@@ -31,7 +31,6 @@
         font-family: 'Open Sans', sans-serif; 
         }
 
-    /* Control the Github Link button */
     .btn {
         font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
         background-color: #3386c0;
@@ -117,7 +116,8 @@
 <nav id="layer_menu"></nav>
 <div id="map"></div>
 <div class="action_menu"> 
-    <button id="homepage" class="btn">Settings</button>
+    <button id="readme" class="btn">Docs</button>
+    <button id="settings" class="btn">GPS<br>Settings</button>
     <button id="waypoint" class="btn">Save<br>Waypoint</button>
     <button id="track" class="btn">Start<br>Track</button>
     <button id="download" class="btn">Download</button>
@@ -130,7 +130,7 @@
 // Replace access token!
 mapboxgl.accessToken = 'pk.eyJ1IjoidWJjbWljcm9tZXQiLCJhIjoiY2xmMnJzYzlnMGFsYTNxcW1kYWhubjBiaSJ9.rhIOVatxQoS4M__qIFv6Pg';
 
-const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/Surveying/data/';
+const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/layers/';
 
     
 //  Custom mapStyle lest us use ESRI raster tiles
@@ -173,7 +173,7 @@ map.addControl(geolocate);
 map.addControl(new mapboxgl.NavigationControl());  
 
 // Define Sites
-const SiteIds = ['BB1','BB2','DSM','RBM'];
+const SiteIds = ['BB1','BB2','BBS','DSM','RBM'];
 var Sites = [];
 for( var i = 0; i < SiteIds.length; i++ ){
         Sites.push(SiteIds[i]+'.geojson');
@@ -225,9 +225,8 @@ function Reset(clear = false){
     save = false;
 };
 
-
 function setAccuracy() {
-  let set = prompt("Set Waypoint Accuracy Function", 1)
+  let set = prompt("Set waypoint averaging: The number of gps pings that go into one waypoint, a higher value will will take longer to process each request and give a more accurate result.", 1)
     if (set != null) {
     waypoint_Accuracy = parseInt(set, 10);
     if (isNaN(waypoint_Accuracy)) { waypoint_Accuracy = 1; }
@@ -265,10 +264,8 @@ function downloadData(){
 const waypoint_marker = new mapboxgl.Marker()
 
 function track() {
-    // var id = 0;
     var line_coords = {"type":"LineString","coordinates":[]};
     var line_object = {"type":"Feature","geometry":[],"properties":{}};
-    // line_object['id']=id;
     line_object['geometry']=line_coords;
     line_coords['coordinates']=user_Coords;
     line_object['properties']['time']=time;
@@ -276,52 +273,38 @@ function track() {
     line_object['properties']['accuracy']=accuracy;
     line_object['properties']['altitudeAccuracy']=altitudeAccuracy;
     line_object['properties']['sample_size']=time.length;
-    // waypoint_marker.setLngLat([average(lon),average(lat)]).addTo(map);
     return line_object;
 };
 
-
 function waypoint() {
-    // var id = 0;
     var point_coords = {"type":"Point","coordinates":[]};
     var point_object = {"type":"Feature","geometry":[],"properties":{"time":[]}};
-    // point_object['id']=id;
     point_object['geometry']=point_coords;
-    if (waypoint_Accuracy == 1){
-        point_coords['coordinates']=user_Coords[user_Coords.length-1];
-        point_object['properties']['time']=time[time.length-1];
-        point_object['properties']['altitude']=altitude[altitude.length-1];
-        point_object['properties']['accuracy']=accuracy[accuracy.length-1];
-        point_object['properties']['altitudeAccuracy']=altitudeAccuracy[altitudeAccuracy.length-1];
+    point_coords['coordinates']=[average(lon),average(lat)]
+    point_object['properties']['time']=time[average(time)]
+    point_object['properties']['altitude']=average(altitude);
+    point_object['properties']['accuracy']=average(accuracy);
+    point_object['properties']['altitudeAccuracy']=average(altitudeAccuracy);
+    point_object['properties']['sample_size']=waypoint_Accuracy;
+    if (time.length > 1){
+        point_object['properties']['sample_duration_ms'] = time[time.length-1]-time[0]
     }
     else{
-        point_coords['coordinates']=user_Coords[average(lon),average(lat)]
-        point_object['properties']['time']=time[time.length-1]
-        point_coords['properties']['altitude']=average(altitude);
-        point_coords['properties']['accuracy']=average(accuracy);
-        point_coords['properties']['altitudeAccuracy']=average(altitudeAccuracy);
-
+        point_object['properties']['sample_duration_ms'] = 0
     }
-    point_object['properties']['sample_size']=waypoint_Accuracy;
     waypoint_marker.setLngLat(user_Coords[user_Coords.length-1]).addTo(map);
     return point_object;
 };
 
 geolocate.on('geolocate', function(e) {
 
-    requestAnimationFrame(
-    function(){
-                document.body.style.background = 'black';
-            }
-        );
     function logCoordsData(){
-        lon.push(e.coords.longitude.toPrecision(8));
-        lat.push(e.coords.latitude.toPrecision(7));
+        lon.push(e.coords.longitude);
+        lat.push(e.coords.latitude);
         altitude.push(e.coords.altitude);
         accuracy.push(e.coords.accuracy);
         altitudeAccuracy.push(e.coords.altitudeAccuracy);
         time.push(Date.now());
-        console.log(accuracy)
         user_Coords.push([lon[time.length-1],lat[time.length-1]]);
     };
 
@@ -364,12 +347,10 @@ geolocate.on('trackuserlocationend', () => {
     location_on = false;
 });
 
-// function reset ()
 
-// Call fit when clicking the zoomto button
-document.getElementById('homepage').addEventListener('click', () => {
-    var elem = document.getElementById("homepage");
-
+//  Action Buttons
+document.getElementById('settings').addEventListener('click', () => {
+    var elem = document.getElementById("settings");
     if (elem.innerHTML=="Reset") {
         Reset();
         elem.innerHTML  = "Settings"}
@@ -379,7 +360,6 @@ document.getElementById('homepage').addEventListener('click', () => {
     };
 });
 
-// Only download when prompted
 document.getElementById('track').addEventListener('click', () => {
     if (location_on == false){
         geolocate.trigger()
@@ -404,11 +384,13 @@ document.getElementById('waypoint').addEventListener('click', () => {
     save = true;
 });
 
-// Only download when prompted
 document.getElementById('download').addEventListener('click', () => {
     downloadData();
 });
-// get geojson layer from github
+
+document.getElementById('readme').addEventListener('click', () => {
+        window.open('https://github.com/ubc-micromet/FieldSiteMaps');
+    });
 
 // get geojson layer from github
 async function getGeoJson(layer) {
@@ -424,6 +406,7 @@ async function mapData(){
     // const site_name = 'name'
     //  On load - add geojson
     map.on('load', async function() {
+        var set_vis = 'visible'
 
         // Add each layer as an invisible layer
         for (var i = 0; i < SiteIds.length; i++) {
@@ -434,17 +417,24 @@ async function mapData(){
             type: 'geojson',
             data: site_data[i]
             });
-              
+            
+            if (SiteIds[i] == 'BBS'){
+                set_vis = 'none'
+            }
+            else{
+                set_vis = 'visible'
+            };
+
             map.addLayer({'id': SiteIds[i],
                 'type': 'circle',
                 'source': SiteIds[i],
                 'layout': {
-                    'visibility': 'none'
+                    'visibility': set_vis
                 },
                 'filter': ['==', '$type', 'Point'],
                 'paint': {
-                    'circle-radius': 6,
-                    'circle-color': '#fc79fa',
+                    'circle-radius': 10,
+                    'circle-color': '#f5bf42',
                     "circle-stroke-width": 1,
                     "circle-stroke-color": 'black'
                     },
@@ -518,37 +508,44 @@ async function mapData(){
 
             const layers = document.getElementById('layer_menu');
             layers.appendChild(link);
-            };    
+            };
+        }  
+    );
 
-    // map.on('click', 'Flux Towers', (e) => {
-    //     // Copy coordinates array.
-    //     const coordinates = e.features[0].geometry.coordinates.slice();
-    //     const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
-    //     '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
-    //     '<tr><td><b>Coordinates</b></td><td>'+e.lngLat['lat'].toPrecision(6)+', '+e.lngLat['lng'].toPrecision(7)+'</td></tr>'+
-    //     '<tr><td><b>First Year</b></td><td>'+e.features[0].properties.Start+'</td></tr>'+
-    //     '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
-    //     '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
-    //     '</table>';
+    map.on('click', SiteIds, (e) => {
+        // Copy coordinates array.
+        const coordinates = [0,0]
+        if (e.features[0].geometry.coordinates[0].constructor === Array){ 
+            coordinates = e.features[0].geometry.coordinates[0].slice();
+        }
+        else{
+            coordinates = e.features[0].geometry.coordinates.slice();
+        };
+        console.log(coordinates)
+        const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
+        '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
+        '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
+        '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
+        '</table>';
         
-    //     // Ensure that if the map is zoomed out such that multiple
-    //     // copies of the feature are visible, the popup appears
-    //     // over the copy being pointed to.
-    //     while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-    //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    //     }
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
         
-    //     new mapboxgl.Popup()
-    //     .setLngLat(coordinates)
-    //     .setHTML(description)
-    //     .addTo(map);
-    //     });
-
-            
-
-            
-            
+        new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(description)
+        .addTo(map);
         });
+
+            
+
+            
+            
+        // });
 
 };
 
