@@ -53,20 +53,12 @@
     }    
     
     .mapboxgl-popup {
-        max-width: 1200px;
-        min-width: 500px;
-        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        padding: 1%;
+        max-width: 50%;
+        min-width: 15%;
+        font-size:2em;
+        line-height:1.25em;
         }
-
-    table {
-        border-collapse: collapse;
-        width: 100%;
-      }
-    td {
-        border: solid 1px #666;
-        max-width:10%;
-        word-break: break-all
-      }
 
     #layer_menu {
         background: #fff;
@@ -180,6 +172,18 @@ async function getGeoJson(layer) {
         return geojson;
     };
 
+    
+// Calculate an average
+function average(elmt){
+    var sum = 0;
+    for( var i = 0; i < elmt.length; i++ ){
+        sum += parseFloat( elmt[i]);
+    }
+    var avg = sum/elmt.length
+    return avg;
+    ;
+}
+
 async function mapData(){
 
     const site_data = []
@@ -199,41 +203,47 @@ async function mapData(){
             });
             
             if (SiteIds[i] == 'BBS'){
-                set_vis = 'none'
+                 // Fill
+                map.addLayer({'id': SiteIds[i],
+                    'type': 'fill',
+                    'source': SiteIds[i],
+                    'layout': {
+                        'visibility': 'visible'
+                    },
+                    'paint': {
+                        'fill-color': '#e3430e',
+                        'fill-opacity': 0.25
+                        }
+                    });
+                // Outline
+                map.addLayer({'id': SiteIds[i]+'_outline',
+                    'type': 'line',
+                    'source': SiteIds[i],
+                    'layout': {
+                        'visibility': 'visible'
+                    },
+                    'paint': {
+                        'line-color': '#000',
+                        'line-width': 3
+                        }
+                    });
             }
             else{
-                set_vis = 'visible'
+                map.addLayer({'id': SiteIds[i],
+                    'type': 'circle',
+                    'source': SiteIds[i],
+                    'layout': {
+                        'visibility': 'visible'
+                    },
+                    'paint': {
+                        'circle-radius': 10,
+                        'circle-color': '#3a34eb',
+                        "circle-stroke-width": 1,
+                        "circle-stroke-color": 'black'
+                        },
+                    });
             };
 
-            map.addLayer({'id': SiteIds[i],
-                'type': 'circle',
-                'source': SiteIds[i],
-                'layout': {
-                    'visibility': set_vis
-                },
-                'filter': ['==', '$type', 'Point'],
-                'paint': {
-                    'circle-radius': 10,
-                    'circle-color': '#f5bf42',
-                    "circle-stroke-width": 1,
-                    "circle-stroke-color": 'black'
-                    },
-                });
-            map.addLayer({'id': SiteIds[i]+'Trail',
-                'type': 'line',
-                'source': SiteIds[i],
-                'layout': {
-                    'visibility': 'none',
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                'filter': ['==', '$type', 'LineString'],
-                'paint': {
-                'line-color': '#0398fc',
-                'line-width': 5
-                }
-                });
-                
             };
 
     });
@@ -244,15 +254,19 @@ async function mapData(){
         for (const id of SiteIds) {
         // Skip layers that already have a button set up.
             if (document.getElementById(id)) {
+                
             continue;
             }
                 // Create a link.
                 const link = document.createElement('a');
+                link.className = 'active';
                 link.id = id;
                 link.href = '#';
                 link.textContent = id;
                 // Show or hide layer when the toggle is clicked.
                 link.onclick = function (e) {
+                    console.log(this);
+
                     const clickedLayer = this.textContent;
                     e.preventDefault();
                     e.stopPropagation();    
@@ -264,24 +278,28 @@ async function mapData(){
                     // Toggle layer visibility by changing the layout object's visibility property.
                     if (visibility === 'visible') {
                         map.setLayoutProperty(clickedLayer, 'visibility', 'none');
-                        map.setLayoutProperty(clickedLayer+'Trail', 'visibility', 'none');
+                        if (clickedLayer === 'BBS'){
+                            map.setLayoutProperty(clickedLayer+'_outline', 'visibility', 'none')
+                        };
                         this.className = '';
                         } 
-                        else {
-                        idx = SiteIds.indexOf(clickedLayer)
+                    else {
+                    idx = SiteIds.indexOf(clickedLayer)
 
-                        let bbox = turf.extent(site_data[idx]);
+                    let bbox = turf.extent(site_data[idx]);
 
-                        // fit zom to the bounding box of whichever layers are loaded
-                        function fit() {
-                            map.fitBounds(bbox, {maxZoom: 15});
-                            };
-            
-                        fit();
-                        this.className = 'active';
-                        map.setLayoutProperty(clickedLayer,'visibility','visible');
-                        map.setLayoutProperty(clickedLayer+'Trail','visibility','visible');
-                        }
+                    // fit zom to the bounding box of whichever layers are loaded
+                    function fit() {
+                        map.fitBounds(bbox, {maxZoom: 15});
+                        };
+        
+                    fit();
+                    this.className = 'active';
+                    map.setLayoutProperty(clickedLayer,'visibility','visible');
+                    if (clickedLayer === 'BBS'){
+                        map.setLayoutProperty(clickedLayer+'_outline', 'visibility', 'visible')
+                    };
+                    }
                 };
 
             const layers = document.getElementById('layer_menu');
@@ -299,12 +317,13 @@ async function mapData(){
         else{
             coordinates = e.features[0].geometry.coordinates.slice();
         };
-        console.log(coordinates)
-        const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:30%"></th><th></th></tr>'+
-        '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
-        '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
-        '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
-        '</table>';
+        // If polygon or line - calculate mean center of vertices
+        if(coordinates[0].constructor === Array){
+            output = coordinates[0].map((_, colIndex) => coordinates.map(row => row[colIndex]));
+            coordinates = [average(output[0]),average(output[1])]
+        };
+        // console.log(e.features[0].geometry.coordinates.slice())
+        const description = '<p><a href='+e.features[0].properties.Info+' target="_blank">'+e.features[0].properties.Name+'</a></p>';
         
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
