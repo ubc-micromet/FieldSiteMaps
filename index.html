@@ -42,7 +42,8 @@
         cursor: pointer;
         padding: 8px;
         border-color: black;
-        min-width: 5%;
+        width: 100%;
+        /* min-width: 5%; */
     }
     .btn:hover {
         background-color: #4ea0da;
@@ -116,11 +117,7 @@
 <nav id="layer_menu"></nav>
 <div id="map"></div>
 <div class="action_menu"> 
-    <button id="readme" class="btn">Docs</button>
-    <button id="settings" class="btn">GPS<br>Settings</button>
-    <button id="waypoint" class="btn">Save<br>Waypoint</button>
-    <button id="track" class="btn">Start<br>Track</button>
-    <button id="download" class="btn">Download</button>
+    <button id="readme" class="btn">View Github</button>
 </div>
 
 
@@ -156,20 +153,12 @@ const mapStyle = {
 //  Create the map - zoom and center are "arbitrary"
 const map = new mapboxgl.Map({
             container: 'map',
-            zoom: 11,
+            zoom: 10,
             center: [-122.998, 49.135],
             style: mapStyle,
             });
 
-//  Locate the user
-var geolocate = new mapboxgl.GeolocateControl({
-    positionOptions: {
-    enableHighAccuracy: true
-    },
-    trackUserLocation: true,
-    showUserHeading: true},);
-
-map.addControl(geolocate);
+// map.addControl(geolocate);
 map.addControl(new mapboxgl.NavigationControl());  
 
 // Define Sites
@@ -179,214 +168,6 @@ for( var i = 0; i < SiteIds.length; i++ ){
         Sites.push(SiteIds[i]+'.geojson');
     }
 
-// Calculate an average
-function average(elmt){
-    var sum = 0;
-    for( var i = 0; i < elmt.length; i++ ){
-        sum += parseFloat( elmt[i]);
-    }
-    var avg = sum/elmt.length
-    return avg;
-    ;
-}
-    
-var lon = [];
-var lat = [];
-var altitude = [];
-var accuracy = [];
-var altitudeAccuracy = [];
-var user_Coords = [];
-var time = [];
-var records_to_download = [];
-var active_Markers = [];
-var waypoint_Accuracy = 1;
-var log = false;
-var save = false;
-var location_on = false;
-
-function Clear(){
-    lon = [];
-    lat = [];
-    altitude = [];
-    accuracy = [];
-    altitudeAccuracy = [];
-    user_Coords = [];
-    time = [];
-};
-
-function Reset(clear = false){
-    if (clear == true){
-        Clear();
-    };
-    records_to_download = [];
-    active_Markers = [];
-    waypoint_Accuracy = 1;
-    log = false;
-    save = false;
-};
-
-function setAccuracy() {
-  let set = prompt("Set waypoint averaging: The number of gps pings that go into one waypoint, a higher value will will take longer to process each request and give a more accurate result.", 1)
-    if (set != null) {
-    waypoint_Accuracy = parseInt(set, 10);
-    if (isNaN(waypoint_Accuracy)) { waypoint_Accuracy = 1; }
-    else if (waypoint_Accuracy<1) { waypoint_Accuracy = 1; };
-    }
-    else{
-    waypoint_Accuracy =1; 
-    };
-};
-
-function setDownloadName() {
-  let set = prompt("Specify Name, e.g.,", "SiteCoordinates")
-    if (set != null) {
-    return set
-    }
-    else{
-    return "SiteCoordinates"
-    };
-};
-
-function downloadData(){
-    var geojson_template = {"type":"FeatureCollection","features":records_to_download};
-    data = JSON.stringify(geojson_template);
-    var blob = new Blob([data], {type: 'text/json'}),
-            e    = document.createEvent('MouseEvents'),
-            a    = document.createElement('a')
-        a.download = setDownloadName()+'.geojson'
-        a.href = window.URL.createObjectURL(blob)
-        a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-        a.dispatchEvent(e)
-        records_to_download = [];
-        active_Markers = [];
-    }
-const waypoint_marker = new mapboxgl.Marker()
-
-function track() {
-    var line_coords = {"type":"LineString","coordinates":[]};
-    var line_object = {"type":"Feature","geometry":[],"properties":{}};
-    line_object['geometry']=line_coords;
-    line_coords['coordinates']=user_Coords;
-    line_object['properties']['time']=time;
-    line_object['properties']['altitude']=altitude;
-    line_object['properties']['accuracy']=accuracy;
-    line_object['properties']['altitudeAccuracy']=altitudeAccuracy;
-    line_object['properties']['sample_size']=time.length;
-    return line_object;
-};
-
-function waypoint() {
-    var point_coords = {"type":"Point","coordinates":[]};
-    var point_object = {"type":"Feature","geometry":[],"properties":{"time":[]}};
-    point_object['geometry']=point_coords;
-    point_coords['coordinates']=[average(lon),average(lat)]
-    point_object['properties']['time']=time[average(time)]
-    point_object['properties']['altitude']=average(altitude);
-    point_object['properties']['accuracy']=average(accuracy);
-    point_object['properties']['altitudeAccuracy']=average(altitudeAccuracy);
-    point_object['properties']['sample_size']=waypoint_Accuracy;
-    if (time.length > 1){
-        point_object['properties']['sample_duration_ms'] = time[time.length-1]-time[0]
-    }
-    else{
-        point_object['properties']['sample_duration_ms'] = 0
-    }
-    waypoint_marker.setLngLat(user_Coords[user_Coords.length-1]).addTo(map);
-    return point_object;
-};
-
-geolocate.on('geolocate', function(e) {
-
-    function logCoordsData(){
-        lon.push(e.coords.longitude);
-        lat.push(e.coords.latitude);
-        altitude.push(e.coords.altitude);
-        accuracy.push(e.coords.accuracy);
-        altitudeAccuracy.push(e.coords.altitudeAccuracy);
-        time.push(Date.now());
-        user_Coords.push([lon[time.length-1],lat[time.length-1]]);
-    };
-
-    location_on = true;
-    if (log == true){
-        logCoordsData()
-        newMark = new mapboxgl.Marker({ color: 'blue'})
-                .setLngLat(user_Coords[user_Coords.length-1])
-                .addTo(map);
-        if (save == true){
-            record = track();
-            records_to_download.push(record);
-            newMark = new mapboxgl.Marker({ color: 'red'})
-                    .setLngLat(user_Coords[user_Coords.length-1])
-                    .addTo(map);
-            active_Markers.push(newMark);
-            save = false;
-            log = false;
-            Clear();
-        }
-    };
-
-    if (save == true){
-        logCoordsData()
-        if (time.length >= waypoint_Accuracy){
-            record = waypoint();
-            records_to_download.push(record);
-            newMark = new mapboxgl.Marker({ color: 'red'})
-                    .setLngLat(user_Coords[user_Coords.length-1])
-                    .addTo(map);
-            active_Markers.push(newMark);
-            save = false;
-            Clear();
-            };
-    };
-        
-    }
-);
-geolocate.on('trackuserlocationend', () => {
-    location_on = false;
-});
-
-
-//  Action Buttons
-document.getElementById('settings').addEventListener('click', () => {
-    var elem = document.getElementById("settings");
-    if (elem.innerHTML=="Reset") {
-        Reset();
-        elem.innerHTML  = "Settings"}
-    else {
-        setAccuracy();
-        elem.innerHTML  = "Reset"
-    };
-});
-
-document.getElementById('track').addEventListener('click', () => {
-    if (location_on == false){
-        geolocate.trigger()
-        location_on = true}
-    var elem = document.getElementById("track");
-
-    if (elem.innerHTML=="Start<br>Track") {
-        log = true
-        elem.innerHTML  = "Save<br>Track"}
-    else {
-        save = true;
-        elem.innerHTML  = "Start<br>Track"
-    };
-});
-
-document.getElementById('waypoint').addEventListener('click', () => {
-    log = false;
-    if (location_on == false){
-        geolocate.trigger()
-        location_on = true}
-    var elem = document.getElementById("waypoint");
-    save = true;
-});
-
-document.getElementById('download').addEventListener('click', () => {
-    downloadData();
-});
 
 document.getElementById('readme').addEventListener('click', () => {
         window.open('https://github.com/ubc-micromet/FieldSiteMaps');
@@ -403,7 +184,6 @@ async function mapData(){
 
     const site_data = []
         
-    // const site_name = 'name'
     //  On load - add geojson
     map.on('load', async function() {
         var set_vis = 'visible'
@@ -456,8 +236,6 @@ async function mapData(){
                 
             };
 
-        // geolocate.trigger();
-        
     });
 
     
@@ -522,7 +300,7 @@ async function mapData(){
             coordinates = e.features[0].geometry.coordinates.slice();
         };
         console.log(coordinates)
-        const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:40%"></th><th></th></tr>'+
+        const description = '<table style="table-layout: fixed; width:100%; font-size:1.25em"><tr><th style="width:30%"></th><th></th></tr>'+
         '<tr><td><b>Site Name</b></td><td>'+e.features[0].properties.Name+'</td></tr>'+
         '<tr><td><b>Site Description</b></td><td style="word-break: normal">'+e.features[0].properties.Description+'</td></tr>'+
         '<tr><td><b>View Web Plot</b></td><td><a href='+e.features[0].properties.WebPlot+' target="_blank">Click Here</a></td></tr>'+
@@ -542,11 +320,6 @@ async function mapData(){
         });
 
             
-
-            
-            
-        // });
-
 };
 
 // Call mapData() to initalize the map
