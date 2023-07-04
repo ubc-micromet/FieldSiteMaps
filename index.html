@@ -151,8 +151,18 @@ const map = new mapboxgl.Map({
             style: mapStyle,
             });
 
-// map.addControl(geolocate);
+            
+//  Locate the user
+var geolocate = new mapboxgl.GeolocateControl({
+    positionOptions: {
+    enableHighAccuracy: true
+    },
+    trackUserLocation: true,
+    showUserHeading: true},);
+
+map.addControl(geolocate);
 map.addControl(new mapboxgl.NavigationControl());  
+map.addControl(new mapboxgl.ScaleControl({position: 'bottom-right'}));
 
 // Define Sites
 const SiteIds = ['BB','BB2','DSM','RBM'];
@@ -161,8 +171,6 @@ for( var i = 0; i < SiteIds.length; i++ ){
         Sites.push(SiteIds[i]+'_FP_Clim_Contours.geojson');
     }
 
-
-// var 
 SiteIds.push('Site_Points')
 Sites.push(Site_Points)
 
@@ -207,12 +215,12 @@ async function mapData(){
             data: site_data[i]
             });
             
-            if (SiteIds[i] != 'Sites_Points'){
+            if (SiteIds[i] != 'Site_Points'){
                 map.addLayer({'id': SiteIds[i],
                     'type': 'fill',
                     'source': SiteIds[i],
                     'layout': {
-                        'visibility': 'visible'
+                        'visibility': 'none'
                     },
                     'paint': {
                         'fill-color': '#e3430e',
@@ -220,7 +228,7 @@ async function mapData(){
                         }
                     });
                 // Outline
-                map.addLayer({'id': SiteIds[i]+'_outline',
+                map.addLayer({'id': SiteIds[i]+'_contours',
                     'type': 'line',
                     'source': SiteIds[i],
                     'layout': {
@@ -234,6 +242,7 @@ async function mapData(){
             }
 
             else{
+                console.log(SiteIds[i])
                 map.addLayer({'id': SiteIds[i],
                     'type': 'circle',
                     'source': SiteIds[i],
@@ -258,8 +267,7 @@ async function mapData(){
         // Set up the corresponding toggle button for each layer.
         for (const id of SiteIds) {
         // Skip layers that already have a button set up.
-            if (document.getElementById(id)) {
-                
+            if (document.getElementById(id) || id == 'Site_Points') {
             continue;
             }
                 // Create a link.
@@ -270,7 +278,7 @@ async function mapData(){
                 link.textContent = id;
                 // Show or hide layer when the toggle is clicked.
                 link.onclick = function (e) {
-                    console.log(this);
+                    // console.log(this);
 
                     const clickedLayer = this.textContent;
                     e.preventDefault();
@@ -295,7 +303,7 @@ async function mapData(){
 
                     // fit zom to the bounding box of whichever layers are loaded
                     function fit() {
-                        map.fitBounds(bbox, {maxZoom: 15});
+                        map.fitBounds(bbox, {maxZoom: 18});
                         };
         
                     fit();
@@ -339,9 +347,9 @@ async function mapData(){
         }
         
         new mapboxgl.Popup()
-        .setLngLat(coordinates)
-        .setHTML(description)
-        .addTo(map);
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map);
         });
 
             
