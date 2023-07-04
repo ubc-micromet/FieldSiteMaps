@@ -1,1 +1,1 @@
-{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-122.9947897,49.1377624]},"properties":{"Name":"Burns Bog Seedling Area","Info":"Lodgepole Pine stand that germinated following the 2016 fire."}}]}
+{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-122.9947897,49.1377624]},"properties":{"Name":"Burns Bog Seedling Area","Info":"https://ubc-micromet.github.io/Data.html#burns-bog-seedling"}}]}
