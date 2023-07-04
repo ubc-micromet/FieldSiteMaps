@@ -119,7 +119,8 @@
 // Replace access token!
 mapboxgl.accessToken = 'pk.eyJ1IjoidWJjbWljcm9tZXQiLCJhIjoiY2xmMnJzYzlnMGFsYTNxcW1kYWhubjBiaSJ9.rhIOVatxQoS4M__qIFv6Pg';
 
-const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/layers/';
+const URL = 'https://raw.githubusercontent.com/ubc-micromet/FieldSiteMaps/main/footprints/';
+const Site_Points = 'EC_Sites.geojson';
 
     
 //  Custom mapStyle lest us use ESRI raster tiles
@@ -154,12 +155,16 @@ const map = new mapboxgl.Map({
 map.addControl(new mapboxgl.NavigationControl());  
 
 // Define Sites
-const SiteIds = ['BB1','BB2','BBS','DSM','RBM'];
+const SiteIds = ['BB','BB2','DSM','RBM'];
 var Sites = [];
 for( var i = 0; i < SiteIds.length; i++ ){
-        Sites.push(SiteIds[i]+'.geojson');
+        Sites.push(SiteIds[i]+'_FP_Clim_Contours.geojson');
     }
 
+
+// var 
+SiteIds.push('Site_Points')
+Sites.push(Site_Points)
 
 document.getElementById('readme').addEventListener('click', () => {
         window.open('https://github.com/ubc-micromet/FieldSiteMaps');
@@ -202,8 +207,7 @@ async function mapData(){
             data: site_data[i]
             });
             
-            if (SiteIds[i] == 'BurnZone'){
-                 // Fill
+            if (SiteIds[i] != 'Sites_Points'){
                 map.addLayer({'id': SiteIds[i],
                     'type': 'fill',
                     'source': SiteIds[i],
@@ -228,7 +232,7 @@ async function mapData(){
                         }
                     });
             }
-            
+
             else{
                 map.addLayer({'id': SiteIds[i],
                     'type': 'circle',
@@ -324,7 +328,8 @@ async function mapData(){
             coordinates = [average(output[0]),average(output[1])]
         };
         // console.log(e.features[0].geometry.coordinates.slice())
-        const description = '<p><a href='+e.features[0].properties.Info+' target="_blank">'+e.features[0].properties.Name+'</a></p>';
+        // const description = '<p><a href='+e.features[0].properties.Info+' target="_blank">'+e.features[0].properties.Name+'</a></p>';
+        const description = e.features[0].properties.Contour_Level;
         
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
