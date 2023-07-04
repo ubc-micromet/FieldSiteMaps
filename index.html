@@ -242,7 +242,6 @@ async function mapData(){
             }
 
             else{
-                console.log(SiteIds[i])
                 map.addLayer({'id': SiteIds[i],
                     'type': 'circle',
                     'source': SiteIds[i],
@@ -278,7 +277,6 @@ async function mapData(){
                 link.textContent = id;
                 // Show or hide layer when the toggle is clicked.
                 link.onclick = function (e) {
-                    // console.log(this);
 
                     const clickedLayer = this.textContent;
                     e.preventDefault();
@@ -335,9 +333,10 @@ async function mapData(){
             output = coordinates[0].map((_, colIndex) => coordinates.map(row => row[colIndex]));
             coordinates = [average(output[0]),average(output[1])]
         };
-        // console.log(e.features[0].geometry.coordinates.slice())
-        // const description = '<p><a href='+e.features[0].properties.Info+' target="_blank">'+e.features[0].properties.Name+'</a></p>';
-        const description = e.features[0].properties.Contour_Level;
+        const info = e.features[0].properties.info;
+        var description = '';
+        if (info.substring(0,4) != 'http'){description = info;}
+        else{description = '<p><a href='+info+' target="_blank">Site info</a></p>'};
         
         // Ensure that if the map is zoomed out such that multiple
         // copies of the feature are visible, the popup appears
